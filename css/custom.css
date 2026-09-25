@@ -1,20 +1,148 @@
-.card-info-social-icons {
-  background: #49b1f5;
-  padding: 12px;
-  border-radius: 12px;
-  margin-top: 10px;
+/* 标签页：胶囊布局 */
+.tag-cloud-list {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  padding: 20px 0;
 }
 
-.card-info-social-icons a {
-  color: white !important;
-  font-size: 20px;
-  margin: 0 10px;
+/* 标签基础样式 */
+.tag-cloud-list a {
+  margin: 0 !important;
+  padding: 8px 16px !important;
+  border: 1px solid transparent;
+  border-radius: 999px !important;
+  background: #eef6ff !important;
+  color: #3977b8 !important;
+  box-shadow: 0 3px 10px rgba(31, 45, 61, 0.08);
+  line-height: 1.5 !important;
 }
-.card-info-social-icons::before {
-  content: "Follow Me";
-  display: block;
-  text-align: center;
-  color: white;
-  font-weight: bold;
-  margin-bottom: 8px;
+
+/* 柔和的循环配色 */
+.tag-cloud-list a:nth-child(4n + 2) {
+  background: #eefaf3 !important;
+  color: #34865b !important;
 }
+
+.tag-cloud-list a:nth-child(4n + 3) {
+  background: #fff4eb !important;
+  color: #bd6b2c !important;
+}
+
+.tag-cloud-list a:nth-child(4n + 4) {
+  background: #f6efff !important;
+  color: #8056b3 !important;
+}
+
+/* 移除原主题的扫光动画 */
+.tag-cloud-list a::before {
+  display: none;
+}
+
+/* 悬浮效果 */
+.tag-cloud-list a:hover {
+  background: #49b1f5 !important;
+  color: #fff !important;
+  box-shadow: 0 8px 20px rgba(73, 177, 245, 0.28);
+  transform: translateY(-3px) scale(1.03);
+}
+
+/* 侧栏标签云 */
+#aside-content .card-tag-cloud {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px 12px;
+}
+
+/* 统一标签字号 */
+#aside-content .card-tag-cloud a {
+  padding: 2px 0;
+  font-size: 0.92rem !important;
+  line-height: 1.5;
+  color: var(--font-color) !important;
+  opacity: 0.72;
+  transition: color 0.2s ease, opacity 0.2s ease, transform 0.2s ease;
+}
+
+/* 添加 # 前缀 */
+#aside-content .card-tag-cloud a::before {
+  content: "#";
+  margin-right: 2px;
+  color: #49b1f5;
+  font-weight: 600;
+}
+
+/* 悬浮效果 */
+#aside-content .card-tag-cloud a:hover {
+  color: #49b1f5 !important;
+  opacity: 1;
+  transform: translateY(-2px);
+}
+
+/* 深色模式 */
+[data-theme='dark'] .tag-cloud-list a {
+  border-color: rgba(255, 255, 255, 0.08);
+  filter: none;
+}
+
+/* 头像卡片的社交图标 */
+#aside-content .card-info .card-info-social-icons {
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+  margin: 12px 0 0;
+}
+
+#aside-content .card-info .card-info-social-icons .social-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  margin: 0;
+  border: 1px solid rgba(73, 177, 245, 0.18);
+  border-radius: 50%;
+  background: rgba(73, 177, 245, 0.08);
+  color: var(--font-color);
+  transition: transform 0.25s ease, background 0.25s ease, color 0.25s ease;
+}
+
+#aside-content .card-info .card-info-social-icons .social-icon:hover {
+  background: #49b1f5;
+  color: #fff;
+  transform: translateY(-3px);
+}
+
+/* 取消主题原来的图标旋转 */
+#aside-content .card-info .card-info-social-icons i:hover {
+  transform: none;
+}
+
+/* 行内公式稍微放大 */
+#article-container mjx-container:not([display]) {
+  font-size: 108% !important;
+}
+
+/* 独立公式适当放大 */
+#article-container mjx-container[display] {
+  font-size: 115% !important;
+}
+
+/* 浅色代码块优化
+:root {
+  --hl-color: #405064;
+  --hl-bg: #f7f9fc;
+  --hltools-bg: #eaf0f6;
+  --hltools-color: #60758a;
+  --hlnumber-bg: #f7f9fc;
+  --hlnumber-color: #a0aec0;
+  --hlscrollbar-bg: #dbe4ee;
+}
+
+#article-container figure.highlight {
+  overflow: hidden;
+  border: 1px solid rgba(90, 110, 130, 0.12);
+  border-radius: 12px;
+  box-shadow: 0 6px 20px rgba(31, 45, 61, 0.08);
+} */
