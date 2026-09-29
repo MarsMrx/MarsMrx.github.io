@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>2.3 二维射影变换 - 马若煊</title>
+  <!-- MathJax 数学公式渲染引擎 -->
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <style>
+    :root {
+      --bg-primary: #F8F9FA;
+      --bg-card: #FFFFFF;
+      --text-main: #0F172A;
+      --text-muted: #475569;
+      --text-light: #64748B;
+      --border-color: #E2E8F0;
+      --accent-blue: #1D4ED8;
+      --accent-sky: #0284C7;
+      --accent-gold: #B45309;
+      --accent-green: #047857;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.05);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      background: #E5E7EB;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      overflow: hidden;
+      color: var(--text-main);
+    }
+
+    #deck-container {
+      width: 1280px;
+      height: 720px;
+      position: relative;
+      background: var(--bg-primary);
+      border-radius: 8px;
+      box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.25);
+      overflow: hidden;
+    }
+
+    .slide {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      padding: 44px 60px 40px 60px;
+      display: none;
+      flex-direction: column;
+      opacity: 0;
+      transition: opacity 0.2s ease-in-out;
+      background: var(--bg-primary);
+    }
+
+    .slide.active {
+      display: flex;
+      opacity: 1;
+    }
+
+    .slide-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 22px;
+      border-bottom: 2px solid var(--border-color);
+      padding-bottom: 12px;
+    }
+
+    .header-left .slide-category {
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--accent-blue);
+      margin-bottom: 4px;
+    }
+
+    .header-left .slide-title {
+      font-size: 26px;
+      font-weight: 700;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .header-right .slide-num {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-light);
+      background: #EDF2F7;
+      padding: 4px 10px;
+      border-radius: 4px;
+    }
+
+    .content-grid {
+      display: grid;
+      gap: 26px;
+      flex: 1;
+      height: calc(100% - 70px);
+    }
+
+    .grid-2col {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .grid-2col-wide-left {
+      grid-template-columns: 1.15fr 0.85fr;
+    }
+
+    .grid-2col-wide-right {
+      grid-template-columns: 0.85fr 1.15fr;
+    }
+
+    .grid-3col {
+      grid-template-columns: repeat(3, 1fr);
+    }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 22px;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .card-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-left: 3px solid var(--accent-blue);
+      padding-left: 8px;
+    }
+
+    .card-title.accent-sky { border-left-color: var(--accent-sky); }
+    .card-title.accent-gold { border-left-color: var(--accent-gold); }
+    .card-title.accent-green { border-left-color: var(--accent-green); }
+
+    ul.academic-list {
+      list-style: none;
+    }
+
+    ul.academic-list li {
+      position: relative;
+      padding-left: 20px;
+      font-size: 15px;
+      line-height: 1.6;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+    }
+
+    ul.academic-list li strong {
+      color: var(--text-main);
+    }
+
+    ul.academic-list li::before {
+      content: "";
+      position: absolute;
+      left: 2px;
+      top: 9px;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--accent-blue);
+    }
+
+    /* 步骤化列表设计 */
+    .step-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .step-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      background: #F8FAFC;
+      border: 1px solid #E2E8F0;
+      border-radius: 6px;
+      padding: 10px 14px;
+    }
+
+    .step-badge {
+      background: var(--accent-blue);
+      color: white;
+      font-size: 11px;
+      font-weight: bold;
+      padding: 2px 7px;
+      border-radius: 4px;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .step-text {
+      font-size: 14px;
+      color: var(--text-muted);
+      line-height: 1.45;
+    }
+
+    .step-text strong {
+      color: var(--text-main);
+    }
+
+    .callout {
+      background: #EFF6FF;
+      border: 1px solid #BFDBFE;
+      border-radius: 6px;
+      padding: 12px 16px;
+      font-size: 13.5px;
+      color: #1E40AF;
+      line-height: 1.5;
+    }
+
+    .callout.warning {
+      background: #FFFBEB;
+      border-color: #FDE68A;
+      color: #92400E;
+    }
+
+    .formula-box {
+      background: #F1F5F9;
+      border: 1px solid #CBD5E1;
+      border-radius: 6px;
+      padding: 12px;
+      text-align: center;
+      margin: 8px 0;
+      font-size: 15.5px;
+      color: var(--text-main);
+    }
+
+    .svg-visual-container {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: #FAFAFA;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 12px;
+    }
+
+    /* 封面设计 */
+    .cover-layout {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 40px;
+    }
+
+    .cover-tag {
+      display: inline-block;
+      padding: 5px 14px;
+      background: #EEF2FF;
+      color: var(--accent-blue);
+      font-weight: 700;
+      font-size: 13px;
+      letter-spacing: 0.05em;
+      border-radius: 20px;
+      margin-bottom: 20px;
+      border: 1px solid #C7D2FE;
+    }
+
+    .cover-title {
+      font-size: 44px;
+      font-weight: 800;
+      color: #0F172A;
+      line-height: 1.2;
+      margin-bottom: 12px;
+    }
+
+    .cover-subtitle {
+      font-size: 20px;
+      color: var(--text-light);
+      font-weight: 400;
+      margin-bottom: 24px;
+    }
+
+    .cover-meta {
+      display: flex;
+      gap: 30px;
+      font-size: 15px;
+      color: var(--text-muted);
+      margin-bottom: 36px;
+      padding: 6px 20px;
+      background: #FFFFFF;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+    }
+
+    .cover-card-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      width: 820px;
+    }
+
+    .cover-card {
+      background: #FFFFFF;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 18px 20px;
+      text-align: left;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .cover-card-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--accent-blue);
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+
+    .cover-card-text {
+      font-size: 14.5px;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    #nav-controls {
+      position: absolute;
+      bottom: 12px;
+      right: 20px;
+      display: flex;
+      gap: 8px;
+      z-index: 100;
+    }
+
+    .nav-btn {
+      background: white;
+      border: 1px solid var(--border-color);
+      color: var(--text-muted);
+      width: 32px;
+      height: 32px;
+      border-radius: 4px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      font-weight: bold;
+      transition: all 0.15s;
+    }
+
+    .nav-btn:hover {
+      background: #F1F5F9;
+      color: var(--text-main);
+    }
+  </style>
+</head>
+<body>
+
+<div id="deck-container">
+
+  <!-- ==================== PAGE 1: 封面 ==================== -->
+  <div class="slide active cover-layout" id="slide-1">
+    <div class="cover-tag">MULTIPLE VIEW GEOMETRY · CH 2.3</div>
+    <h1 class="cover-title">2.3 二维射影变换</h1>
+    <h2 class="cover-subtitle">以平面透视校正（Perspective Rectification）为例</h2>
+    
+    <div class="cover-meta">
+      <span>汇报人：<strong>马若煊</strong></span>
+      <span>汇报时间：<strong>2026/09/30</strong></span>
+    </div>
+
+    <div class="cover-card-container">
+      <div class="cover-card">
+        <div class="cover-card-label">Core Question 01</div>
+        <div class="cover-card-text"><strong>几何本质：</strong>倾斜拍摄的物理平面经历了怎样的映射？为什么直线依然保持笔直？</div>
+      </div>
+      <div class="cover-card">
+        <div class="cover-card-label">Core Question 02</div>
+        <div class="cover-card-text"><strong>代数求解：</strong>为什么一个 \(3 \times 3\) 齐次矩阵能够完全描述该形变，并将其逆向拉正？</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== PAGE 2: 几何直观 ==================== -->
+  <div class="slide" id="slide-2">
+    <div class="slide-header">
+      <div class="header-left">
+        <div class="slide-category">Problem Motivation</div>
+        <div class="slide-title">直观现象：倾斜墙面的透视畸变与校正</div>
+      </div>
+      <div class="header-right"><span class="slide-num">02 / 08</span></div>
+    </div>
+    <div class="content-grid grid-2col-wide-right">
+      <div class="card" style="justify-content: space-between;">
+        <div>
+          <div class="card-title">观察：原书图 2.4 (Fig. 2.4) 的核心几何特征</div>
+          <ul class="academic-list">
+            <li><strong>透视汇聚效应：</strong>原本真实世界中相互平行的窗框直线，在倾斜拍摄的图像中不再平行，而是向远方延长交于有限灭点。</li>
+            <li><strong>校正目标（Rectification）：</strong>寻找一个平面映射，计算逆变换并重采样图像，使物体恢复其在真实正面正交视角下的几何形态。</li>
+          </ul>
+        </div>
+
+        <div class="callout warning">
+          <strong>⚠ 关键适用边界（平面性前提）：</strong><br>
+          射影变换严格作用于<strong>同一个物理平面</strong>。在图 (b) 中，外墙被完美拉正，但最下方的地面却发生非线性拉扯。因为地面与墙面不共面，同一个二维射影矩阵不能同时校正多个空间平面。
+        </div>
+      </div>
+
+      <!-- 矢量重绘原书图 2.4 示意 -->
+      <div class="card" style="padding: 12px;">
+        <div class="svg-visual-container">
+          <svg viewBox="0 0 520 280" width="100%" height="250">
+            <!-- (a) 倾斜透视图像 -->
+            <g transform="translate(10, 20)">
+              <rect x="0" y="0" width="220" height="200" fill="#E2E8F0" rx="4" stroke="#94A3B8"/>
+              <polygon points="20,170 190,140 190,40 20,20" fill="#CBD5E1" stroke="#475569" stroke-width="2"/>
+              <polygon points="40,150 90,142 90,50 40,40" fill="#94A3B8" opacity="0.6"/>
+              <polygon points="120,138 170,130 170,60 120,55" fill="#94A3B8" opacity="0.6"/>
+              <line x1="20" y1="20" x2="260" y2="50" stroke="#EF4444" stroke-width="1.5" stroke-dasharray="4"/>
+              <line x1="20" y1="170" x2="260" y2="120" stroke="#EF4444" stroke-width="1.5" stroke-dasharray="4"/>
+              <text x="105" y="190" text-anchor="middle" font-size="12" fill="#334155" font-weight="600">(a) 倾斜拍摄：窗户边缘汇聚</text>
+            </g>
+
+            <!-- 转换箭头 -->
+            <g transform="translate(245, 110)">
+              <path d="M 0,10 L 25,10 M 20,5 L 25,10 L 20,15" stroke="#1D4ED8" stroke-width="2.5" fill="none"/>
+              <text x="12" y="-2" text-anchor="middle" font-size="12" font-weight="bold" fill="#1D4ED8">H⁻¹</text>
+            </g>
+
+            <!-- (b) 正面正交合成图 -->
+            <g transform="translate(285, 20)">
+              <rect x="0" y="0" width="220" height="200" fill="#E2E8F0" rx="4" stroke="#94A3B8"/>
+              <polygon points="20,160 190,160 190,30 20,30" fill="#CBD5E1" stroke="#1D4ED8" stroke-width="2"/>
+              <rect x="40" y="45" width="55" height="100" fill="#94A3B8" opacity="0.6"/>
+              <rect x="115" y="45" width="55" height="100" fill="#94A3B8" opacity="0.6"/>
+              <polygon points="20,160 190,160 210,195 0,195" fill="#FCA5A5" opacity="0.5"/>
+              <text x="105" y="190" text-anchor="middle" font-size="12" fill="#334155" font-weight="600">(b) 校正图：平行性恢复（地面畸变）</text>
+            </g>
+          </svg>
+          <div style="font-size: 11px; color: var(--text-light); margin-top: 4px;">引用来源：Hartley & Zisserman, Multiple View Geometry, p.35, Fig. 2.4</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== PAGE 3: 几何定义 ==================== -->
+  <div class="slide" id="slide-3">
+    <div class="slide-header">
+      <div class="header-left">
+        <div class="slide-category">Mathematical Foundation</div>
+        <div class="slide-title">定义：可逆映射与保共线性（Collineation）</div>
+      </div>
+      <div class="header-right"><span class="slide-num">03 / 08</span></div>
+    </div>
+    <div class="content-grid grid-2col">
+      <div class="card">
+        <div class="card-title">几何公理化定义（Definition 2.9）</div>
+        <ul class="academic-list">
+          <li><strong>单应映射（Homography / Projectivity）：</strong>射影变换是射影平面 \(\mathbb{P}^2\) 到自身的一个<strong>可逆映射 \(h\)</strong>。</li>
+          <li><strong>核心不变量（直线性保持）：</strong>三点 \(\mathbf{x}_1, \mathbf{x}_2, \mathbf{x}_3\) 共线，当且仅当变换后的像点 \(h(\mathbf{x}_1), h(\mathbf{x}_2), h(\mathbf{x}_3)\) 依然共线。</li>
+          <li><strong>共线映射（Collineation）：</strong>在射影几何中，“保持直线映为直线”是其最本质、最具决定性的几何要求。</li>
+        </ul>
+        <div class="callout">
+          <strong>几何直观：</strong>透视拍摄破坏了度量（长度、夹角与面积），但绝不会把平直的墙面直线拍成曲面。
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title accent-sky">代数等价定理（Theorem 2.10）</div>
+        <ul class="academic-list">
+          <li><strong>定理表述：</strong>映射 \(h: \mathbb{P}^2 \to \mathbb{P}^2\) 是射影变换，<strong>当且仅当</strong>存在一个非奇异的 \(3 \times 3\) 矩阵 \(H\)，使得对于所有点向量均有：
+            <div class="formula-box">\(h(\mathbf{x}) = H\mathbf{x}\)</div>
+          </li>
+          <li><strong>群性质（Projective Linear Group）：</strong>由于变换矩阵可逆，射影变换的逆映射仍然是射影变换，且复合映射依然是射影变换，构成射影线性群 \(PL(3)\)。</li>
+          <li><strong>重要结论：</strong>纯几何层面的“共线保持”完全等价于齐次坐标系统下的“线性可逆矩阵乘法”。</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== PAGE 4: 核心代数表示 ==================== -->
+  <div class="slide" id="slide-4">
+    <div class="slide-header">
+      <div class="header-left">
+        <div class="slide-category">Algebraic Formulation</div>
+        <div class="slide-title">核心矩阵方程与自由度（Degrees of Freedom）</div>
+      </div>
+      <div class="header-right"><span class="slide-num">04 / 08</span></div>
+    </div>
+    <div class="content-grid grid-2col">
+      <div class="card">
+        <div class="card-title">齐次矩阵形式与尺度等价性</div>
+        <ul class="academic-list">
+          <li><strong>核心映射方程：</strong>
+            <div class="formula-box">
+              \(\mathbf{x}' \sim H\mathbf{x} \iff \begin{pmatrix} x_1' \\ x_2' \\ x_3' \end{pmatrix} = \begin{bmatrix} h_{11} & h_{12} & h_{13} \\ h_{21} & h_{22} & h_{23} \\ h_{31} & h_{32} & h_{33} \end{bmatrix} \begin{pmatrix} x_1 \\ x_2 \\ x_3 \end{pmatrix}\)
+            </div>
+          </li>
+          <li><strong>齐次等价（“\(\sim\)”）：</strong>齐次坐标只在非零常数比例下确定。两向量方向相同即代表同一点。</li>
+          <li><strong>自由度剖析（8 dof）：</strong>矩阵 \(H\) 共有 9 个元素，但任意非零整体缩放 \(c H\) 代表完全相同的映射。因此仅有 8 个独立的参数比值，即 <strong>8 个自由度</strong>。</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <div class="card-title accent-gold">非齐次展开与透视非线性效应</div>
+        <ul class="academic-list">
+          <li><strong>非齐次像素坐标展开（设 \(x_3 = x_3' = 1\)）：</strong>
+            <div class="formula-box" style="font-size: 15px;">
+              \(x' = \dfrac{h_{11}x + h_{12}y + h_{13}}{h_{31}x + h_{32}y + h_{33}}, \quad y' = \dfrac{h_{21}x + h_{22}y + h_{23}}{h_{31}x + h_{32}y + h_{33}}\)
+            </div>
+          </li>
+          <li><strong>透视非线性的物理源头：</strong>两式共享公共分母 \(z' = h_{31}x + h_{32}y + h_{33}\)。由于分母随坐标 \((x,y)\) 动态改变，导致距相机不同位置的点缩放剧烈变化（近大远小）。</li>
+          <li><strong>仿射退化对比：</strong>当 \(h_{31}=h_{32}=0\) 时，分母退化为常数，射影变换降级为仿射变换（保持平行性）。</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== PAGE 5: 求解 H (强化 Step 1-2-3 流程) ==================== -->
+  <div class="slide" id="slide-5">
+    <div class="slide-header">
+      <div class="header-left">
+        <div class="slide-category">Computation & Pipeline</div>
+        <div class="slide-title">如何求解与校正：四点对应算法流程</div>
+      </div>
+      <div class="header-right"><span class="slide-num">05 / 08</span></div>
+    </div>
+    <div class="content-grid grid-2col-wide-left">
+      <div class="card" style="justify-content: space-between;">
+        <div>
+          <div class="card-title">求解与校正三步算法流程</div>
+          <div class="step-list">
+            <div class="step-item">
+              <span class="step-badge">STEP 1</span>
+              <div class="step-text"><strong>特征点提取与目标设定：</strong>在倾斜图像中拾取 4 个角点 \((x_i, y_i)\)，指定其在校正平面上的目标标准矩形坐标 \((x_i', y_i')\)。</div>
+            </div>
+
+            <div class="step-item">
+              <span class="step-badge">STEP 2</span>
+              <div class="step-text"><strong>构建并求解线性方程组：</strong>交叉相乘整理出线性方程，4 组点提供 8 个独立方程，解出非奇异矩阵 \(H\)（差一个尺度因子）：
+                <div class="formula-box" style="font-size: 13.5px; text-align: left; padding: 6px 12px; margin: 4px 0 0 0;">
+                  \(x_i'(h_{31}x_i + h_{32}y_i + h_{33}) = h_{11}x_i + h_{12}y_i + h_{13}\)<br>
+                  \(y_i'(h_{31}x_i + h_{32}y_i + h_{33}) = h_{21}x_i + h_{22}y_i + h_{23}\)
+                </div>
+              </div>
+            </div>
+
+            <div class="step-item">
+              <span class="step-badge">STEP 3</span>
+              <div class="step-text"><strong>反向重采样校正图像：</strong>求出逆变换 \(H^{-1}\)，将整个目标画面的像素坐标逆向映射回原图提取纹理，合成无透视畸变正视图。</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="callout warning">
+          <strong>⚠️ 退化几何约束（Degeneracy）：</strong><br>
+          四点必须处于<strong>一般位置（General Position）</strong>——即任意三点均不能共线，否则方程退化为奇异解。
+        </div>
+      </div>
+
+      <!-- 配图：4点单应几何映射图解 -->
+      <div class="card" style="padding: 12px;">
+        <div class="svg-visual-container">
+          <svg viewBox="0 0 460 270" width="100%" height="240">
+            <!-- 倾斜视点平面 -->
+            <g transform="translate(10, 20)">
+              <polygon points="15,160 175,130 155,30 25,50" fill="#EEF2FF" stroke="#6366F1" stroke-width="1.5"/>
+              <circle cx="25" cy="50" r="4" fill="#4F46E5"/>
+              <text x="20" y="40" font-size="11" font-weight="bold" fill="#312E81">x₁</text>
+              <circle cx="155" cy="30" r="4" fill="#4F46E5"/>
+              <text x="160" y="25" font-size="11" font-weight="bold" fill="#312E81">x₂</text>
+              <circle cx="175" cy="130" r="4" fill="#4F46E5"/>
+              <text x="180" y="140" font-size="11" font-weight="bold" fill="#312E81">x₃</text>
+              <circle cx="15" cy="160" r="4" fill="#4F46E5"/>
+              <text x="5" y="175" font-size="11" font-weight="bold" fill="#312E81">x₄</text>
+              <text x="95" y="100" text-anchor="middle" font-size="12" fill="#4338CA" font-weight="600">斜拍原图 (x, y)</text>
+            </g>
+
+            <!-- 映射箭头 -->
+            <g transform="translate(200, 100)">
+              <path d="M 0,10 L 50,10 M 40,5 L 50,10 L 40,15" stroke="#1D4ED8" stroke-width="2.5" fill="none"/>
+              <text x="25" y="-4" text-anchor="middle" font-size="13" font-weight="bold" fill="#1D4ED8">H</text>
+            </g>
+
+            <!-- 目标正交平面 -->
+            <g transform="translate(265, 20)">
+              <rect x="25" y="35" width="140" height="120" fill="#F0FDF4" stroke="#16A34A" stroke-width="1.5"/>
+              <circle cx="25" cy="35" r="4" fill="#15803D"/>
+              <text x="15" y="25" font-size="11" font-weight="bold" fill="#14532D">x'₁</text>
+              <circle cx="165" cy="35" r="4" fill="#15803D"/>
+              <text x="170" y="25" font-size="11" font-weight="bold" fill="#14532D">x'₂</text>
+              <circle cx="165" cy="155" r="4" fill="#15803D"/>
+              <text x="170" y="170" font-size="11" font-weight="bold" fill="#14532D">x'₃</text>
+              <circle cx="25" cy="155" r="4" fill="#15803D"/>
+              <text x="15" y="170" font-size="11" font-weight="bold" fill="#14532D">x'₄</text>
+              <text x="95" y="100" text-anchor="middle" font-size="12" fill="#15803D" font-weight="600">目标校正图 (x', y')</text>
+            </g>
+          </svg>
+          <div style="font-size: 11px; color: var(--text-light); text-align: center; margin-top: 4px;">图解：4 组点对应构建 8 个独立方程求解 8 dof 变换</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== PAGE 6: 拓展物理场景 ==================== -->
+  <div class="slide" id="slide-6">
+    <div class="slide-header">
+      <div class="header-left">
+        <div class="slide-category">Physical Scenarios</div>
+        <div class="slide-title">射影变换在计算机视觉中的典型物理场景</div>
+      </div>
+      <div class="header-right"><span class="slide-num">06 / 08</span></div>
+    </div>
+    <div class="content-grid grid-3col">
+      <div class="card">
+        <div class="card-title">场景 1：世界平面诱导</div>
+        <div style="height: 140px; margin-bottom: 10px;">
+          <svg viewBox="0 0 200 120" width="100%" height="100%">
+            <polygon points="10,110 190,110 160,70 40,70" fill="#F1F5F9" stroke="#94A3B8"/>
+            <circle cx="100" cy="90" r="3" fill="#EF4444"/>
+            <text x="100" y="105" font-size="10" text-anchor="middle" fill="#475569">空间平面 π</text>
+            <polygon points="20,20 40,35 40,5" fill="#3B82F6"/>
+            <polygon points="180,20 160,35 160,5" fill="#3B82F6"/>
+            <line x1="20" y1="20" x2="100" y2="90" stroke="#64748B" stroke-dasharray="2"/>
+            <line x1="180" y1="20" x2="100" y2="90" stroke="#64748B" stroke-dasharray="2"/>
+          </svg>
+        </div>
+        <ul class="academic-list">
+          <li><strong>两视图观测同一平面：</strong>当空间结构位于同一物理平面上时，两台任意位置相机成像之间满足 \(\mathbf{x}' = H\mathbf{x}\)（图 2.5a）。</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <div class="card-title accent-sky">场景 2：相机纯旋转 / 变焦</div>
+        <div style="height: 140px; margin-bottom: 10px;">
+          <svg viewBox="0 0 200 120" width="100%" height="100%">
+            <circle cx="100" cy="100" r="4" fill="#0F172A"/>
+            <text x="100" y="115" font-size="10" text-anchor="middle" fill="#0F172A">中心 C 固定</text>
+            <line x1="40" y1="20" x2="120" y2="35" stroke="#3B82F6" stroke-width="2"/>
+            <line x1="80" y1="35" x2="160" y2="20" stroke="#10B981" stroke-width="2"/>
+            <path d="M 85,90 A 20,20 0 0,1 115,90" fill="none" stroke="#F59E0B" stroke-width="1.5"/>
+          </svg>
+        </div>
+        <ul class="academic-list">
+          <li><strong>中心重合的图像簇：</strong>相机机位不动，仅原地旋转或变焦时，哪怕拍摄三维立体场景，各图像之间也完全由 \(H\) 严格关联（全景拼接基础，图 2.5b）。</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <div class="card-title accent-green">场景 3：光源与平面阴影</div>
+        <div style="height: 140px; margin-bottom: 10px;">
+          <svg viewBox="0 0 200 120" width="100%" height="100%">
+            <circle cx="40" cy="20" r="5" fill="#F59E0B"/>
+            <text x="40" y="12" font-size="9" text-anchor="middle" fill="#B45309">点光源</text>
+            <polygon points="120,40 160,40 140,80 100,80" fill="#94A3B8" opacity="0.6"/>
+            <polygon points="50,110 180,110 140,95 80,95" fill="#CBD5E1"/>
+            <line x1="40" y1="20" x2="100" y2="80" stroke="#F59E0B" stroke-dasharray="2"/>
+            <line x1="40" y1="20" x2="140" y2="80" stroke="#F59E0B" stroke-dasharray="2"/>
+          </svg>
+        </div>
+        <ul class="academic-list">
+          <li><strong>阴影透视映射：</strong>空间平面上的物体轮廓，在点光源照射下投射到另一地面平面形成的阴影，构成射影透视映射（图 2.5c）。</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== PAGE 7: 直线与二次曲线变换 (已彻底去掉板书提示卡) ==================== -->
+  <div class="slide" id="slide-7">
+    <div class="slide-header">
+      <div class="header-left">
+        <div class="slide-category">Geometric Entities Transformation</div>
+        <div class="slide-title">直线与二次曲线的射影变换法则</div>
+      </div>
+      <div class="header-right"><span class="slide-num">07 / 08</span></div>
+    </div>
+    <div class="content-grid grid-2col-wide-left">
+      <div class="card">
+        <div class="card-title">基本实体的代数变换对照</div>
+        <ul class="academic-list">
+          <li><strong>点变换（逆变 Contravariant）：</strong>
+            <div class="formula-box">\(\mathbf{x}' = H\mathbf{x}\)</div>
+          </li>
+          <li><strong>直线变换（协变 Covariant）：</strong>
+            <div class="formula-box">\(\mathbf{l}' = H^{-T}\mathbf{l}\)</div>
+            <em>直线的表示向量由逆矩阵的转置 \(H^{-T}\) 变换，以保持点在直线上的代数从属关系不变。</em>
+          </li>
+          <li><strong>点二次曲线变换（Point Conic）：</strong>
+            <div class="formula-box">\(C' = H^{-T} C H^{-1}\)</div>
+          </li>
+          <li><strong>线对偶二次曲线变换（Dual Conic）：</strong>
+            <div class="formula-box">\(C^{*\prime} = H C^* H^T\)</div>
+          </li>
+        </ul>
+      </div>
+
+      <div class="card" style="justify-content: center;">
+        <div class="card-title accent-gold">对偶几何实体的代数包络直观</div>
+        <div class="svg-visual-container" style="height: 250px;">
+          <!-- 点二次曲线与切线对偶曲线示意图 (Fig 2.2) -->
+          <svg viewBox="0 0 320 180" width="100%" height="100%">
+            <!-- 椭圆点曲线 -->
+            <ellipse cx="160" cy="90" rx="100" ry="48" fill="none" stroke="#2563EB" stroke-width="2.5"/>
+            <!-- 切线包络示意 -->
+            <line x1="40" y1="42" x2="280" y2="42" stroke="#94A3B8" stroke-width="1.2"/>
+            <line x1="40" y1="138" x2="280" y2="138" stroke="#94A3B8" stroke-width="1.2"/>
+            <line x1="60" y1="20" x2="60" y2="160" stroke="#94A3B8" stroke-width="1.2"/>
+            <line x1="260" y1="20" x2="260" y2="160" stroke="#94A3B8" stroke-width="1.2"/>
+            <line x1="75" y1="30" x2="250" y2="148" stroke="#B45309" stroke-width="1.5" stroke-dasharray="4"/>
+            <text x="160" y="95" text-anchor="middle" font-size="13" fill="#1E40AF" font-weight="bold">xᵀ C x = 0</text>
+            <text x="160" y="166" text-anchor="middle" font-size="12" fill="#475569">对偶线切线包络: lᵀ C* l = 0</text>
+          </svg>
+          <div style="font-size: 11px; color: var(--text-light); text-align: center; margin-top: 6px;">原书 Fig. 2.2：点二次曲线与其切线对偶包络</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== PAGE 8: 总结 ==================== -->
+  <div class="slide" id="slide-8">
+    <div class="slide-header">
+      <div class="header-left">
+        <div class="slide-category">Summary</div>
+        <div class="slide-title">2.3 核心结论总结</div>
+      </div>
+      <div class="header-right"><span class="slide-num">08 / 08</span></div>
+    </div>
+    <div class="content-grid grid-2col">
+      <div class="card">
+        <div class="card-title">四大核心要点回顾</div>
+        <ul class="academic-list">
+          <li><strong>保共线性（Collineation）：</strong>射影变换是保持“三点共线依然共线”的最广泛可逆映射，也是透视相机的成像模型基础。</li>
+          <li><strong>代数表征与自由度：</strong>由 \(3 \times 3\) 齐次矩阵 \(H\) 严格描述，扣除整体不影响变换的尺度因子后，具有 <strong>8 个自由度</strong>。</li>
+          <li><strong>极小求解条件：</strong>每一对匹配点给出 2 个独立线性方程，由 <strong>4 组一般位置对应点</strong>（无三点共线）即可唯一解出 \(H\)。</li>
+          <li><strong>对偶与协变变换律：</strong>坐标变换下几何实体的变换矩阵不同——点逆变（乘 \(H\)），直线与曲线协变（分别乘 \(H^{-T}\) 与 \(H^{-T}CH^{-1}\)）。</li>
+        </ul>
+      </div>
+
+      <div class="card" style="justify-content: center; background: #FFFFFF;">
+        <div style="border: 1px solid var(--border-color); border-radius: 8px; padding: 24px; background: #F8FAFC;">
+          <h4 style="font-size: 17px; color: var(--text-main); margin-bottom: 12px; font-weight: 700;">二维射影几何的方法论启示</h4>
+          <p style="font-size: 15px; color: var(--text-muted); line-height: 1.7; margin-bottom: 16px;">
+            二维射影变换（Homography）构成了多视图几何研究的奠基石。无论单视角图像校正、全景图无缝拼接，还是多视图间由平面诱导的极线几何匹配，其数学核心皆统一于齐次坐标系下的非奇异线性代数运算。
+          </p>
+          <div style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; color: var(--accent-blue); background: #EFF6FF; padding: 10px; border-radius: 4px;">
+            Projective Plane IP² ⇄ Homography Matrix H₃ₓ₃
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 底部交互控制按钮 -->
+  <div id="nav-controls">
+    <button class="nav-btn" onclick="prevSlide()" title="上一页 (←)">‹</button>
+    <button class="nav-btn" onclick="nextSlide()" title="下一页 (→)">›</button>
+  </div>
+
+</div>
+
+<script>
+  let currentSlide = 1;
+  const totalSlides = 8;
+
+  function showSlide(index) {
+    if (index < 1 || index > totalSlides) return;
+    document.querySelectorAll('.slide').forEach(s => s.classList.remove('active'));
+    const target = document.getElementById(`slide-${index}`);
+    if (target) {
+      target.classList.add('active');
+      currentSlide = index;
+    }
+  }
+
+  function nextSlide() {
+    if (currentSlide < totalSlides) {
+      showSlide(currentSlide + 1);
+    }
+  }
+
+  function prevSlide() {
+    if (currentSlide > 1) {
+      showSlide(currentSlide - 1);
+    }
+  }
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight' || e.key === 'Space') {
+      nextSlide();
+    } else if (e.key === 'ArrowLeft') {
+      prevSlide();
+    }
+  });
+</script>
+
+</body>
+</html>
