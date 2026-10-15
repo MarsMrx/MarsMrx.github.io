@@ -1,3 +1,68 @@
+/* 演示馆：仅影响索引页卡片 */
+#article-container .showcase-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin: 16px 0 24px;
+}
+
+#article-container .showcase-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 22px;
+  border: 1px solid rgba(73, 177, 245, 0.2);
+  border-radius: 14px;
+  background: rgba(73, 177, 245, 0.045);
+  color: var(--font-color);
+  text-decoration: none;
+  overflow-wrap: anywhere;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+#article-container .showcase-card:hover,
+#article-container .showcase-card:focus-visible {
+  border-color: #49b1f5;
+  background: rgba(73, 177, 245, 0.1);
+}
+
+#article-container .showcase-card:focus-visible {
+  outline: 2px solid #49b1f5;
+  outline-offset: 3px;
+}
+
+#article-container .showcase-card strong {
+  color: var(--font-color);
+  font-size: 1.1em;
+  line-height: 1.6;
+}
+
+#article-container .showcase-kind {
+  color: var(--font-color);
+  opacity: 0.7;
+  font-size: 0.85em;
+}
+
+#article-container .showcase-description {
+  flex: 1;
+  line-height: 1.8;
+}
+
+#article-container .showcase-action {
+  color: #1684be;
+  font-size: 0.9em;
+}
+
+[data-theme='dark'] #article-container .showcase-action {
+  color: #6fcaff;
+}
+
+@media (max-width: 600px) {
+  #article-container .showcase-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* 标签页：胶囊布局 */
 .tag-cloud-list {
   display: flex;
