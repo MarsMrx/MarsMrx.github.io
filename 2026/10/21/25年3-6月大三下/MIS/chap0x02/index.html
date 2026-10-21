@@ -1,0 +1,243 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>实验二 无线接入网入侵与防御｜MIS | MarsMrx's Blog</title><meta name="author" content="MarsMrx"><meta name="copyright" content="MarsMrx"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="【大三下25年3-6月】实践无线接入网中的 Deauthentication 攻击与隐藏 SSID 发现，记录无线网卡监听配置、攻击过程及抓包分析方法。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="实验二 无线接入网入侵与防御｜MIS">
+<meta property="og:url" content="https://marsmrx.github.io/2026/10/21/25%E5%B9%B43-6%E6%9C%88%E5%A4%A7%E4%B8%89%E4%B8%8B/MIS/chap0x02/index.html">
+<meta property="og:site_name" content="MarsMrx&#39;s Blog">
+<meta property="og:description" content="【大三下25年3-6月】实践无线接入网中的 Deauthentication 攻击与隐藏 SSID 发现，记录无线网卡监听配置、攻击过程及抓包分析方法。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://marsmrx.github.io/img/cat-icon.png">
+<meta property="article:published_time" content="2026-10-20T16:00:00.000Z">
+<meta property="article:modified_time" content="2026-10-21T08:20:44.219Z">
+<meta property="article:author" content="MarsMrx">
+<meta property="article:tag" content="无线网络安全">
+<meta property="article:tag" content="入侵与防御">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://marsmrx.github.io/img/cat-icon.png"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "实验二 无线接入网入侵与防御｜MIS",
+  "url": "https://marsmrx.github.io/2026/10/21/25%E5%B9%B43-6%E6%9C%88%E5%A4%A7%E4%B8%89%E4%B8%8B/MIS/chap0x02/",
+  "image": "https://marsmrx.github.io/img/cat-icon.png",
+  "datePublished": "2026-10-20T16:00:00.000Z",
+  "dateModified": "2026-10-21T08:20:44.219Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "MarsMrx",
+      "url": "https://MarsMrx.github.io"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/img/favicon-cat.png"><link rel="canonical" href="https://marsmrx.github.io/2026/10/21/25%E5%B9%B43-6%E6%9C%88%E5%A4%A7%E4%B8%89%E4%B8%8B/MIS/chap0x02/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css?v=5.5.3"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.1.0/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.12.0/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: false,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '实验二 无线接入网入侵与防御｜MIS',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><link rel="stylesheet" href="/css/custom.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lxgw-wenkai-screen-webfont@1.7.0/style.css"><meta name="generator" content="Hexo 7.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/img/cat-icon.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">16</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">13</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">5</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div><div class="menus_item"><a class="site-page" href="/categories/Paper/"><i class="fa-fw fas fa-file-alt"></i><span> Paper</span></a></div><div class="menus_item"><a class="site-page" href="/quote/"><i class="fa-fw fas fa-quote-left"></i><span> Quote</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> About</span></a></div><div class="menus_item"><a class="site-page" href="/showcase/"><i class="fa-fw fas fa-laptop-code"></i><span> 演示馆</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url(/img/banner_img.png);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><span class="site-name">MarsMrx's Blog</span></a><a class="nav-page-title" href="/"><span class="site-name">实验二 无线接入网入侵与防御｜MIS</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  返回首页</span></span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div><div class="menus_item"><a class="site-page" href="/categories/Paper/"><i class="fa-fw fas fa-file-alt"></i><span> Paper</span></a></div><div class="menus_item"><a class="site-page" href="/quote/"><i class="fa-fw fas fa-quote-left"></i><span> Quote</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> About</span></a></div><div class="menus_item"><a class="site-page" href="/showcase/"><i class="fa-fw fas fa-laptop-code"></i><span> 演示馆</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">实验二 无线接入网入侵与防御｜MIS</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-10-20T16:00:00.000Z" title="发表于 2026-10-21 00:00:00">2026-10-21</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-10-21T08:20:44.219Z" title="更新于 2026-10-21 16:20:44">2026-10-21</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/MIS/">MIS</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><h1 id="实验二：无线接入网入侵与防御"><a href="#实验二：无线接入网入侵与防御" class="headerlink" title="实验二：无线接入网入侵与防御"></a>实验二：无线接入网入侵与防御</h1><h2 id="实验任务"><a href="#实验任务" class="headerlink" title="实验任务"></a>实验任务</h2><ul>
+<li><input checked="" disabled="" type="checkbox"> Deauthentication 攻击</li>
+<li><input checked="" disabled="" type="checkbox"> 隐藏SSID发现</li>
+</ul>
+<h2 id="实验环境"><a href="#实验环境" class="headerlink" title="实验环境"></a>实验环境</h2><ul>
+<li>kali 虚拟机  </li>
+<li>wireshark  </li>
+<li>usb无线网卡</li>
+</ul>
+<h2 id="实验内容"><a href="#实验内容" class="headerlink" title="实验内容"></a>实验内容</h2><h3 id="实验一：基于-aireplay-ng-的-Deauthentication-攻击"><a href="#实验一：基于-aireplay-ng-的-Deauthentication-攻击" class="headerlink" title="实验一：基于 aireplay-ng 的 Deauthentication 攻击"></a>实验一：基于 aireplay-ng 的 Deauthentication 攻击</h3><h4 id="步骤一：完成攻击"><a href="#步骤一：完成攻击" class="headerlink" title="步骤一：完成攻击"></a>步骤一：完成攻击</h4><p>先用手机连接到<code>HUAWEI-Moblie</code>,找到手机的MAC地址<code>ca:4d:b8:60:74:f0</code>  </p>
+<ol>
+<li><p>配置无线网卡进入监听模式，之后以channel hopping 模式抓包获取目标WiFi(<code>HUAWEI-Moblie</code>)的<code>BSSID</code>和<code>工作信道</code>  </p>
+<ul>
+<li>WiFi名称：<code>HUAWEI-Moblie</code></li>
+<li>BSSID：<code>82:1C:6D:AA:EC:BF</code></li>
+<li>工作信道：<code>6</code><br> <img src="/2026/10/21/25%E5%B9%B43-6%E6%9C%88%E5%A4%A7%E4%B8%89%E4%B8%8B/MIS/chap0x02/%E5%B7%A5%E4%BD%9C%E4%BF%A1%E9%81%93.png" alt="工作信道"></li>
+</ul>
+</li>
+<li><p>将无线网卡的监听信道设置为6，与目标WiFi一致  </p>
+<p><img src="/2026/10/21/25%E5%B9%B43-6%E6%9C%88%E5%A4%A7%E4%B8%89%E4%B8%8B/MIS/chap0x02/channel%E8%AE%BE%E7%BD%AE%E4%B8%BA6.png" alt=" ">  </p>
+</li>
+<li><p>完成 Deauthentication 攻击  </p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">aireplay-ng --deauth 0 -a [ROUTER_BSSID] -c </span><br><span class="line">[TARGET_MAC_ADDRESS] wlan0mon  </span><br><span class="line"></span><br><span class="line"><span class="comment"># --deatuh 0 发送无限数量的解除验证数据包</span></span><br><span class="line"><span class="comment"># -a [ROUTER_BSSID] 指定目标WiFi的 BSSID</span></span><br><span class="line"><span class="comment"># -c [TARGET_MAC_ADDRESS] 指定攻击设备的 MAC 地址</span></span><br></pre></td></tr></table></figure>
+
+<p><img src="/2026/10/21/25%E5%B9%B43-6%E6%9C%88%E5%A4%A7%E4%B8%89%E4%B8%8B/MIS/chap0x02/deauth%E6%94%BB%E5%87%BB.png" alt="deauth攻击"></p>
+</li>
+</ol>
+<h4 id="步骤二：捕获并分析攻击流量"><a href="#步骤二：捕获并分析攻击流量" class="headerlink" title="步骤二：捕获并分析攻击流量"></a>步骤二：捕获并分析攻击流量</h4><p>在channel 6上进行抓包并保存捕获的流量包，同时在另一个终端开启deauthentication 攻击。攻击后，发现手机端已断开<code>HUAWEI-Moblie</code>的连接  </p>
+<p>   <img src="/2026/10/21/25%E5%B9%B43-6%E6%9C%88%E5%A4%A7%E4%B8%89%E4%B8%8B/MIS/chap0x02/%E6%8A%93%E5%8C%85%E5%B9%B6%E6%94%BB%E5%87%BB.png" alt="抓包并攻击">  </p>
+<h4 id="思考题一"><a href="#思考题一" class="headerlink" title="思考题一"></a>思考题一</h4><p><strong>1. 在分析数据包的过程中，如何快速过滤出所有的 Deauthentication 数据包？请给出对应的 Wireshark 过滤语法及截图。</strong>  </p>
+ <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">wlan.fc.type_subtype == 0x000C </span><br></pre></td></tr></table></figure>
+
+<p><img src="/2026/10/21/25%E5%B9%B43-6%E6%9C%88%E5%A4%A7%E4%B8%89%E4%B8%8B/MIS/chap0x02/deauth%E6%8A%A5%E6%96%87.png" alt="deauth报文">  </p>
+<p><strong>2.请分析你捕获到的数据包，找出其中 ROUTER_BSSID 和<br>TARGET_MAC_ADDRESS 均为你自己设备的数据包。请给出对应的<br>Wireshark 过滤语法及截图</strong>  </p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">wlan.bssid == 82:1C:6D:AA:EC:BF and wlan.da == CA:4D:B8:60:74:F0</span><br></pre></td></tr></table></figure>
+
+<p><img src="/2026/10/21/25%E5%B9%B43-6%E6%9C%88%E5%A4%A7%E4%B8%89%E4%B8%8B/MIS/chap0x02/bssid_mac.png" alt="bssid+mac">  </p>
+<p><strong>3. 请分析你捕获到的数据包，Deauthentication 数据包是何种 802.11 类型的帧，例如是管理帧、控制帧还是数据帧，通过报文中的哪个字段可以判断其类型？</strong>  </p>
+<p>Deauthentication 数据包属于802.11中的<strong>管理帧</strong>，在报文中的 <code>Frame Control Field</code>中的<code>type</code>字段可以看到它是属于<code>Management frame</code>  </p>
+<p><img src="/2026/10/21/25%E5%B9%B43-6%E6%9C%88%E5%A4%A7%E4%B8%89%E4%B8%8B/MIS/chap0x02/%E7%A1%AE%E5%AE%9Adeauth%E5%B8%A7%E7%9A%84%E7%B1%BB%E5%9E%8B.png" alt="deauth报文">  </p>
+<h3 id="实验二：发现隐藏-SSID"><a href="#实验二：发现隐藏-SSID" class="headerlink" title="实验二：发现隐藏 SSID"></a>实验二：发现隐藏 SSID</h3><p>➡️<strong>隐藏SSID</strong>  </p>
+<blockquote>
+<p>隐藏SSID是，关闭无线接入点AP的Beacon Frame(包含SSID字段值)广播，从而使得网络名称不在公开列表里显示, 造成了无线网络“隐身”的假象。客户端需要手动输入SSID及密码才可以连接</p>
+</blockquote>
+<p>➡️<strong>如何发现隐藏SSID</strong>  </p>
+<blockquote>
+<p>STA在加入隐藏SSID的AP时，发送的<code>Probe Request</code>帧中包含无线网络的SSID;<br>某个AP下其客户端重新连接时的<code>Probe Request</code>、<code>Association Request</code>、和AP发送的<code>Probe Response</code>帧中都会包含隐藏SSID  </p>
+</blockquote>
+<p>   实验设置：<br>   隐藏 SSID：HUAWEI-Mobile2<br>   密码：12345678  </p>
+<ol>
+<li><p>配置网卡wlan0进入monitor模式，并开启抓包，找到隐藏SSID的BSSID和信道  </p>
+<ul>
+<li>ESSID字段值是&lt;length: 0&gt;，就是空的，即隐藏SSID  </li>
+<li>BSSID：<code>62:81:48:B1:EC:BF</code>  </li>
+<li>工作信道：<code>12</code></li>
+</ul>
+<p><img src="/2026/10/21/25%E5%B9%B43-6%E6%9C%88%E5%A4%A7%E4%B8%89%E4%B8%8B/MIS/chap0x02/length_0.png" alt="抓包发现隐藏ssid">  </p>
+</li>
+<li><p>指定channel&#x3D;12，抓包并保捕获到的流量包。同时开始发送deauthentication攻击。之后等待客户端重连，观察抓包输出信息，发现原先 ESSID 字段由 <code>&lt;length 0&gt;</code>变成了<code>HUAWEI-Mobile2</code>，成功发现隐藏SSID。  </p>
+<p><img src="/2026/10/21/25%E5%B9%B43-6%E6%9C%88%E5%A4%A7%E4%B8%89%E4%B8%8B/MIS/chap0x02/%E5%8F%91%E7%8E%B0%E9%9A%90%E8%97%8Fssid.png" alt="ssid显露">  </p>
+<p><img src="/2026/10/21/25%E5%B9%B43-6%E6%9C%88%E5%A4%A7%E4%B8%89%E4%B8%8B/MIS/chap0x02/%E5%8F%91%E9%80%81deauth%E5%8C%85%E5%88%B0%E6%8C%87%E5%AE%9Aap.png" alt="发送一次攻击"></p>
+</li>
+</ol>
+<h4 id="思考题二"><a href="#思考题二" class="headerlink" title="思考题二"></a>思考题二</h4><p><strong>1. 分析捕获到的数据包，查找⽬标隐藏 SSID 62:81:48:B1:EC:BF 发出的所有 Beacon 报⽂，并查看报⽂中 SSID 字段设置。请给出对应的Wireshark过滤语法及截图。</strong>  </p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">wlan.ta == 62:81:48:B1:EC:BF and wlan.fc.type_subtype == 0x0008</span><br><span class="line"><span class="comment"># 或者</span></span><br><span class="line">wlan.bssid == 62:81:48:B1:EC:BF and wlan.fc.type_subtype == 0x0008</span><br><span class="line"><span class="comment"># SSID字段 使用通配符 WildCard SSID</span></span><br><span class="line"><span class="comment"># length 为0</span></span><br><span class="line"><span class="comment"># 在自定义的SSID列中显示为&lt;MISSSING&gt;缺失</span></span><br></pre></td></tr></table></figure>
+
+<p><img src="/2026/10/21/25%E5%B9%B43-6%E6%9C%88%E5%A4%A7%E4%B8%89%E4%B8%8B/MIS/chap0x02/beacon%E6%8A%A5%E6%96%87.png" alt="beacon报文">  </p>
+<p><strong>2. 分析捕获到的数据包，查找哪些报⽂中包含了隐藏 SSID<br>62:81:48:B1:EC:BF 的 ESSID 名称？请给出任意⼀条报⽂的编号、报⽂的802.11 协议帧类型。请给出对应的 Wireshark 过滤语法及截图。</strong>  </p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">wlan.ssid == <span class="string">&quot;HUAWEI-Mobile2&quot;</span></span><br><span class="line"><span class="comment"># 已经找到了隐藏ssid的真实essid=HUAWEI-Mobile2，直接过滤</span></span><br><span class="line"><span class="comment"># 发现在probe response、probe request、association request帧中确实存在隐藏SSID的ESSID名称</span></span><br><span class="line"></span><br><span class="line">wlan.bssid == 62:81:48:B1:EC:BF and wlan.ssid == <span class="string">&quot;HUAWEI-Mobile2&quot;</span></span><br><span class="line"><span class="comment"># 这个过滤出是没有probe request帧的，</span></span><br><span class="line"><span class="comment"># 此处的STA在发送probe request时是广播的</span></span><br></pre></td></tr></table></figure>
+
+<p><img src="/2026/10/21/25%E5%B9%B43-6%E6%9C%88%E5%A4%A7%E4%B8%89%E4%B8%8B/MIS/chap0x02/Hssid_essid.png" alt="包含隐藏SSID">  </p>
+<ul>
+<li>报文编号：7161  </li>
+<li>协议帧类型：管理帧中的<code>Probe Response</code></li>
+</ul>
+<h2 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h2><ul>
+<li><a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/27782177097">Wi-Fi技术：为什么有Wi-Fi隐藏SSID？</a></li>
+<li><a target="_blank" rel="noopener" href="https://c4pr1c3.github.io/cuc-mis/chap0x03/main.html">第三章 无线接入网入侵与防御</a></li>
+</ul>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="https://MarsMrx.github.io">MarsMrx</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="https://marsmrx.github.io/2026/10/21/25%E5%B9%B43-6%E6%9C%88%E5%A4%A7%E4%B8%89%E4%B8%8B/MIS/chap0x02/">https://marsmrx.github.io/2026/10/21/25年3-6月大三下/MIS/chap0x02/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来源 <a href="https://MarsMrx.github.io" target="_blank">MarsMrx's Blog</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/%E6%97%A0%E7%BA%BF%E7%BD%91%E7%BB%9C%E5%AE%89%E5%85%A8/">无线网络安全</a><a class="post-meta__tags" href="/tags/%E5%85%A5%E4%BE%B5%E4%B8%8E%E9%98%B2%E5%BE%A1/">入侵与防御</a></div><div class="post-share"><div class="social-share" data-image="/img/cat-icon.png" data-sites="facebook,x,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related" href="/2026/10/21/25%E5%B9%B43-6%E6%9C%88%E5%A4%A7%E4%B8%89%E4%B8%8B/MIS/chap0x03/" title="实验三 Evil Twin 无线网络攻击｜MIS"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info"><div class="info-1"><div class="info-item-1">上一篇</div><div class="info-item-2">实验三 Evil Twin 无线网络攻击｜MIS</div></div><div class="info-2"><div class="info-item-1">【大三下25年3-6月】围绕 Evil Twin（邪恶双胞胎）攻击搭建实验环境，介绍同名伪造热点、hostapd 与 dnsmasq 的配置，以及无线网络安全风险与防御思路。</div></div></div></a><a class="pagination-related" href="/2026/10/16/25%E5%B9%B43-6%E6%9C%88%E5%A4%A7%E4%B8%89%E4%B8%8B/MIS/chap0x01/" title="实验一 无线接入网监听｜MIS"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-right"><div class="info-1"><div class="info-item-1">下一篇</div><div class="info-item-2">实验一 无线接入网监听｜MIS</div></div><div class="info-2"><div class="info-item-1">【大三下25年3-6月】记录无线接入网监听实验，使用 Kali 与 USB 无线网卡查看硬件及驱动信息，配置监听模式并捕获 802.11 数据包，结合 Wireshark 示例抓包实践 WPA/WPA2 PSK 解密与 SSID 统计分析。</div></div></div></a></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><a class="pagination-related" href="/2026/10/21/25%E5%B9%B43-6%E6%9C%88%E5%A4%A7%E4%B8%89%E4%B8%8B/MIS/chap0x04/" title="实验四 Scapy 基础与数据包嗅探｜MIS"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-10-21</div><div class="info-item-2">实验四 Scapy 基础与数据包嗅探｜MIS</div></div><div class="info-2"><div class="info-item-1">【大三下25年3-6月】使用 Scapy 完成网络数据包捕获与分析实验，运行 ex-1.py 至 ex-6.py 等脚本，说明输入输出、核心功能及关键参数，并记录无线嗅探实践。</div></div></div></a><a class="pagination-related" href="/2026/10/16/25%E5%B9%B43-6%E6%9C%88%E5%A4%A7%E4%B8%89%E4%B8%8B/MIS/chap0x01/" title="实验一 无线接入网监听｜MIS"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-10-16</div><div class="info-item-2">实验一 无线接入网监听｜MIS</div></div><div class="info-2"><div class="info-item-1">【大三下25年3-6月】记录无线接入网监听实验，使用 Kali 与 USB 无线网卡查看硬件及驱动信息，配置监听模式并捕获 802.11 数据包，结合 Wireshark 示例抓包实践 WPA/WPA2 PSK 解密与 SSID 统计分析。</div></div></div></a><a class="pagination-related" href="/2026/10/21/25%E5%B9%B43-6%E6%9C%88%E5%A4%A7%E4%B8%89%E4%B8%8B/MIS/chap0x03/" title="实验三 Evil Twin 无线网络攻击｜MIS"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-10-21</div><div class="info-item-2">实验三 Evil Twin 无线网络攻击｜MIS</div></div><div class="info-2"><div class="info-item-1">【大三下25年3-6月】围绕 Evil Twin（邪恶双胞胎）攻击搭建实验环境，介绍同名伪造热点、hostapd 与 dnsmasq 的配置，以及无线网络安全风险与防御思路。</div></div></div></a></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/img/cat-icon.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">MarsMrx</div><div class="author-info-description">的小窝U•ェ•*U
+</div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">16</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">13</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">5</div></a></div><div class="card-info-social-icons"><a class="social-icon" href="https://github.com/MarsMrx" target="_blank" title="Github"><i class="fab fa-github"></i></a><a class="social-icon" href="mailto:3536663251@qq.com" target="_blank" title="Email"><i class="fas fa-envelope"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">This is my Blog</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content is-expand"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%AE%9E%E9%AA%8C%E4%BA%8C%EF%BC%9A%E6%97%A0%E7%BA%BF%E6%8E%A5%E5%85%A5%E7%BD%91%E5%85%A5%E4%BE%B5%E4%B8%8E%E9%98%B2%E5%BE%A1"><span class="toc-text">实验二：无线接入网入侵与防御</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%9E%E9%AA%8C%E4%BB%BB%E5%8A%A1"><span class="toc-text">实验任务</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%9E%E9%AA%8C%E7%8E%AF%E5%A2%83"><span class="toc-text">实验环境</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%9E%E9%AA%8C%E5%86%85%E5%AE%B9"><span class="toc-text">实验内容</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%AE%9E%E9%AA%8C%E4%B8%80%EF%BC%9A%E5%9F%BA%E4%BA%8E-aireplay-ng-%E7%9A%84-Deauthentication-%E6%94%BB%E5%87%BB"><span class="toc-text">实验一：基于 aireplay-ng 的 Deauthentication 攻击</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%AD%A5%E9%AA%A4%E4%B8%80%EF%BC%9A%E5%AE%8C%E6%88%90%E6%94%BB%E5%87%BB"><span class="toc-text">步骤一：完成攻击</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%AD%A5%E9%AA%A4%E4%BA%8C%EF%BC%9A%E6%8D%95%E8%8E%B7%E5%B9%B6%E5%88%86%E6%9E%90%E6%94%BB%E5%87%BB%E6%B5%81%E9%87%8F"><span class="toc-text">步骤二：捕获并分析攻击流量</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%80%9D%E8%80%83%E9%A2%98%E4%B8%80"><span class="toc-text">思考题一</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%AE%9E%E9%AA%8C%E4%BA%8C%EF%BC%9A%E5%8F%91%E7%8E%B0%E9%9A%90%E8%97%8F-SSID"><span class="toc-text">实验二：发现隐藏 SSID</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%80%9D%E8%80%83%E9%A2%98%E4%BA%8C"><span class="toc-text">思考题二</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8F%82%E8%80%83%E9%93%BE%E6%8E%A5"><span class="toc-text">参考链接</span></a></li></ol></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/10/21/25%E5%B9%B43-6%E6%9C%88%E5%A4%A7%E4%B8%89%E4%B8%8B/MIS/chap0x04/" title="实验四 Scapy 基础与数据包嗅探｜MIS">实验四 Scapy 基础与数据包嗅探｜MIS</a><time datetime="2026-10-20T16:10:00.000Z" title="发表于 2026-10-21 00:10:00">2026-10-21</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/10/21/25%E5%B9%B43-6%E6%9C%88%E5%A4%A7%E4%B8%89%E4%B8%8B/MIS/chap0x03/" title="实验三 Evil Twin 无线网络攻击｜MIS">实验三 Evil Twin 无线网络攻击｜MIS</a><time datetime="2026-10-20T16:05:00.000Z" title="发表于 2026-10-21 00:05:00">2026-10-21</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/10/21/25%E5%B9%B43-6%E6%9C%88%E5%A4%A7%E4%B8%89%E4%B8%8B/MIS/chap0x02/" title="实验二 无线接入网入侵与防御｜MIS">实验二 无线接入网入侵与防御｜MIS</a><time datetime="2026-10-20T16:00:00.000Z" title="发表于 2026-10-21 00:00:00">2026-10-21</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/10/16/25%E5%B9%B43-6%E6%9C%88%E5%A4%A7%E4%B8%89%E4%B8%8B/MIS/chap0x01/" title="实验一 无线接入网监听｜MIS">实验一 无线接入网监听｜MIS</a><time datetime="2026-10-16T14:54:10.000Z" title="发表于 2026-10-16 22:54:10">2026-10-16</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/10/15/25%E5%B9%B43-6%E6%9C%88%E5%A4%A7%E4%B8%89%E4%B8%8B/%E9%80%86%E5%90%91%E4%B8%8E%E8%BD%AF%E4%BB%B6%E5%AE%89%E5%85%A8/exp5%E5%AE%89%E5%8D%93App%E7%A0%B4%E8%A7%A3/" title="Exp5 安卓App破解 ｜逆向工程与软件安全">Exp5 安卓App破解 ｜逆向工程与软件安全</a><time datetime="2026-10-15T09:16:00.000Z" title="发表于 2026-10-15 17:16:00">2026-10-15</time></div></div></div></div></div></div></main><footer id="footer" style="background-image: url(/img/banner_img.png);"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2025 - 2026 By MarsMrx</span><span class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo 7.3.0</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly 5.5.3</a></span></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=5.5.3"></script><script src="/js/main.js?v=5.5.3"></script><div class="js-pjax"></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>
