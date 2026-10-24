@@ -1,0 +1,257 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>实验十 IoTGoat 固件静态安全分析｜MIS | MarsMrx's Blog</title><meta name="author" content="MarsMrx"><meta name="copyright" content="MarsMrx"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="【大三下25年3-6月】以 IoTGoat 为对象，分析弱口令与硬编码密码、不安全生态接口及缺乏安全更新机制等物联网固件安全问题。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="实验十 IoTGoat 固件静态安全分析｜MIS">
+<meta property="og:url" content="https://marsmrx.github.io/2026/10/24/25%E5%B9%B43-6%E6%9C%88%E5%A4%A7%E4%B8%89%E4%B8%8B/MIS/chap0x0A/index.html">
+<meta property="og:site_name" content="MarsMrx&#39;s Blog">
+<meta property="og:description" content="【大三下25年3-6月】以 IoTGoat 为对象，分析弱口令与硬编码密码、不安全生态接口及缺乏安全更新机制等物联网固件安全问题。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://marsmrx.github.io/img/cat-icon.png">
+<meta property="article:published_time" content="2026-10-23T16:30:00.000Z">
+<meta property="article:modified_time" content="2026-10-24T07:36:12.958Z">
+<meta property="article:author" content="MarsMrx">
+<meta property="article:tag" content="物联网安全">
+<meta property="article:tag" content="固件安全">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://marsmrx.github.io/img/cat-icon.png"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "实验十 IoTGoat 固件静态安全分析｜MIS",
+  "url": "https://marsmrx.github.io/2026/10/24/25%E5%B9%B43-6%E6%9C%88%E5%A4%A7%E4%B8%89%E4%B8%8B/MIS/chap0x0A/",
+  "image": "https://marsmrx.github.io/img/cat-icon.png",
+  "datePublished": "2026-10-23T16:30:00.000Z",
+  "dateModified": "2026-10-24T07:36:12.958Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "MarsMrx",
+      "url": "https://MarsMrx.github.io"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/img/favicon-cat.png"><link rel="canonical" href="https://marsmrx.github.io/2026/10/24/25%E5%B9%B43-6%E6%9C%88%E5%A4%A7%E4%B8%89%E4%B8%8B/MIS/chap0x0A/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css?v=5.5.3"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.1.0/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.12.0/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: false,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '实验十 IoTGoat 固件静态安全分析｜MIS',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><link rel="stylesheet" href="/css/custom.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lxgw-wenkai-screen-webfont@1.7.0/style.css"><meta name="generator" content="Hexo 7.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/img/cat-icon.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">24</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">15</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">5</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div><div class="menus_item"><a class="site-page" href="/categories/Paper/"><i class="fa-fw fas fa-file-alt"></i><span> Paper</span></a></div><div class="menus_item"><a class="site-page" href="/quote/"><i class="fa-fw fas fa-quote-left"></i><span> Quote</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> About</span></a></div><div class="menus_item"><a class="site-page" href="/showcase/"><i class="fa-fw fas fa-laptop-code"></i><span> 演示馆</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url(/img/banner_img.png);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><span class="site-name">MarsMrx's Blog</span></a><a class="nav-page-title" href="/"><span class="site-name">实验十 IoTGoat 固件静态安全分析｜MIS</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  返回首页</span></span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div><div class="menus_item"><a class="site-page" href="/categories/Paper/"><i class="fa-fw fas fa-file-alt"></i><span> Paper</span></a></div><div class="menus_item"><a class="site-page" href="/quote/"><i class="fa-fw fas fa-quote-left"></i><span> Quote</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> About</span></a></div><div class="menus_item"><a class="site-page" href="/showcase/"><i class="fa-fw fas fa-laptop-code"></i><span> 演示馆</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">实验十 IoTGoat 固件静态安全分析｜MIS</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-10-23T16:30:00.000Z" title="发表于 2026-10-24 00:30:00">2026-10-24</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-10-24T07:36:12.958Z" title="更新于 2026-10-24 15:36:12">2026-10-24</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/MIS/">MIS</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><h1 id="实验九：IoTGoat-固件静态安全分析"><a href="#实验九：IoTGoat-固件静态安全分析" class="headerlink" title="实验九：IoTGoat 固件静态安全分析"></a>实验九：IoTGoat 固件静态安全分析</h1><h2 id="实验任务"><a href="#实验任务" class="headerlink" title="实验任务"></a>实验任务</h2><ul>
+<li><input checked="" disabled="" type="checkbox"> 实验一：分析 Weak Guessable or Hardcoded Passwords  </li>
+<li><input checked="" disabled="" type="checkbox"> 实验⼆：Insecure Ecosystem Interfaces  </li>
+<li><input checked="" disabled="" type="checkbox"> 实验三：Lack of Secure Update Mechanism</li>
+</ul>
+<h2 id="实验环境"><a href="#实验环境" class="headerlink" title="实验环境"></a>实验环境</h2><ul>
+<li>kali  </li>
+<li><a target="_blank" rel="noopener" href="https://github.com/OWASP/IoTGoat/releases/download/v1.0/IoTGoat-x86.vdi">IoTGoat</a></li>
+</ul>
+<h2 id="实验内容"><a href="#实验内容" class="headerlink" title="实验内容"></a>实验内容</h2><blockquote>
+<p>IoTGoat 是一个基于 OpenWrt 的故意不安全的固件项目，由 OWASP（开放 Web 应用安全项目） 维护。它旨在为软件开发人员和安全专业人员提供一个平台，用于测试和学习物联网设备中常见的安全漏洞  </p>
+</blockquote>
+<h2 id="IoTGoat-安装与配置"><a href="#IoTGoat-安装与配置" class="headerlink" title="IoTGoat 安装与配置"></a>IoTGoat 安装与配置</h2><p>1.下载 IoTGoat-x86.vdi文件  </p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://github.com/OWASP/IoTGoat/releases/download/v1.0/IoTGoat-x86.vdi">IoTGoat</a></li>
+</ul>
+<p>2.在virtualbox中新建虚拟机  </p>
+<p><img src="/2026/10/24/25%E5%B9%B43-6%E6%9C%88%E5%A4%A7%E4%B8%89%E4%B8%8B/MIS/chap0x0A/%E5%88%9B%E5%BB%BA%E8%99%9A%E6%8B%9F%E7%94%B5%E8%84%91.png" alt=" ">  </p>
+<p>3.指定硬盘为下载的vdi文件  </p>
+<p><img src="/2026/10/24/25%E5%B9%B43-6%E6%9C%88%E5%A4%A7%E4%B8%89%E4%B8%8B/MIS/chap0x0A/%E6%8C%87%E5%AE%9Avdi%E6%96%87%E4%BB%B6.png" alt=" ">  </p>
+<p>4.设置网络为<strong>NAT网络</strong>，确保其与kali使用的是<strong>同一个</strong>NAT网络  </p>
+<p><img src="/2026/10/24/25%E5%B9%B43-6%E6%9C%88%E5%A4%A7%E4%B8%89%E4%B8%8B/MIS/chap0x0A/%E8%AE%BE%E7%BD%AENAT%E7%BD%91%E7%BB%9C.png" alt=" ">  </p>
+<h3 id="IOTGoat-使用"><a href="#IOTGoat-使用" class="headerlink" title="IOTGoat 使用"></a>IOTGoat 使用</h3><p>1.等待安装完成，点击回车，出现如下终端界面  </p>
+<p><img src="/2026/10/24/25%E5%B9%B43-6%E6%9C%88%E5%A4%A7%E4%B8%89%E4%B8%8B/MIS/chap0x0A/%E5%AE%89%E8%A3%85%E5%AE%8C%E6%88%90.png" alt=" ">  </p>
+<p>2.查看IoTGoat的ip为<code>10.0.2.4</code>，确保其和kali之间的网络联通，然后，在kali的浏览器中访问<code>http://10.0.2.4</code>之后得到如下界面，证明IoTGoat安装和配置成功  </p>
+<p><img src="/2026/10/24/25%E5%B9%B43-6%E6%9C%88%E5%A4%A7%E4%B8%89%E4%B8%8B/MIS/chap0x0A/%E7%A1%AE%E4%BF%9D%E5%8F%AF%E4%BB%A5%E4%BA%92%E9%80%9A.png" alt=" ">  </p>
+<p><img src="/2026/10/24/25%E5%B9%B43-6%E6%9C%88%E5%A4%A7%E4%B8%89%E4%B8%8B/MIS/chap0x0A/%E6%B5%8F%E8%A7%88%E5%99%A8%E8%AE%BF%E9%97%AE%E6%88%90%E5%8A%9F.png" alt=" ">  </p>
+<hr>
+<h2 id="IoTGoat分析"><a href="#IoTGoat分析" class="headerlink" title="IoTGoat分析"></a>IoTGoat分析</h2><h3 id="实验一：分析-Weak-Guessable-or-Hardcoded-Passwords"><a href="#实验一：分析-Weak-Guessable-or-Hardcoded-Passwords" class="headerlink" title="实验一：分析 Weak Guessable or Hardcoded Passwords"></a>实验一：分析 Weak Guessable or Hardcoded Passwords</h3><ul>
+<li><p>查看敏感文件<code>/etc/passwd</code>和<code>/etc/shadow</code>  </p>
+<ol>
+<li><p>使用binwalk解压固件  </p>
+<p><img src="/2026/10/24/25%E5%B9%B43-6%E6%9C%88%E5%A4%A7%E4%B8%89%E4%B8%8B/MIS/chap0x0A/binwalk%E8%A7%A3%E5%8E%8B%E5%9B%BA%E4%BB%B6.png" alt=" ">  </p>
+</li>
+<li><p>查看敏感文件<code>/etc/passwd</code>和<code>/etc/shadow</code>  </p>
+<p> <img src="/2026/10/24/25%E5%B9%B43-6%E6%9C%88%E5%A4%A7%E4%B8%89%E4%B8%8B/MIS/chap0x0A/%E6%9F%A5%E7%9C%8B%E6%95%8F%E6%84%9F%E6%96%87%E4%BB%B6.png" alt=" "></p>
+</li>
+</ol>
+</li>
+</ul>
+<hr>
+<ul>
+<li><strong>破解iotgoatuser的密码</strong></li>
+</ul>
+<ol>
+<li><p>下载恶意僵尸网络Mirai Botnet的密码本  </p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://github.com/danielmiessler/SecLists/blob/master/Passwords/Malware/mirai-botnet.txt">mirai-botnet.txt</a></li>
+</ul>
+</li>
+<li><p>处理密码本，只保留密码部分<br> <img src="/2026/10/24/25%E5%B9%B43-6%E6%9C%88%E5%A4%A7%E4%B8%89%E4%B8%8B/MIS/chap0x0A/%E6%8F%90%E5%8F%96%E5%AF%86%E7%A0%81%E6%9C%AC%E5%AF%86%E7%A0%81%E9%83%A8%E5%88%86.png" alt=" ">  </p>
+</li>
+<li><p>john破解密码,并查看已经破解的用户名密码  </p>
+ <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">john _IoTGoat-x86.img.extracted/squashfs-root/etc/shadow --format=md5crypt --wordlist=mirai-botnet-password.txt</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>用户名:密码 —— <code>iotgoatuser:7ujMko0vizxv</code><br> <img src="/2026/10/24/25%E5%B9%B43-6%E6%9C%88%E5%A4%A7%E4%B8%89%E4%B8%8B/MIS/chap0x0A/john%E7%A0%B4%E8%A7%A3%E5%AF%86%E7%A0%81.png" alt=" "></li>
+</ul>
+</li>
+</ol>
+<h3 id="实验二：Insecure-Ecosystem-Interfaces"><a href="#实验二：Insecure-Ecosystem-Interfaces" class="headerlink" title="实验二：Insecure Ecosystem Interfaces"></a>实验二：Insecure Ecosystem Interfaces</h3><ol>
+<li><p>使用firmwalker分析IoTGoat固件  </p>
+ <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">./firmwalker.sh ../_IoTGoat-x86.img.extracted/squashfs-root/</span><br></pre></td></tr></table></figure>
+
+<p> <img src="/2026/10/24/25%E5%B9%B43-6%E6%9C%88%E5%A4%A7%E4%B8%89%E4%B8%8B/MIS/chap0x0A/firmwaker%E5%88%86%E6%9E%90.png" alt=" ">  </p>
+<p> <img src="/2026/10/24/25%E5%B9%B43-6%E6%9C%88%E5%A4%A7%E4%B8%89%E4%B8%8B/MIS/chap0x0A/firmwalker%E7%BB%93%E6%9E%9C.png" alt=" ">  </p>
+</li>
+<li><p>查看分析结果，在admin关键词中，有个文件是<code>/usr/lib/lua/luci/controller/iotgoat/iotgoat.lua</code>,查看这个文件  </p>
+<p> <img src="/2026/10/24/25%E5%B9%B43-6%E6%9C%88%E5%A4%A7%E4%B8%89%E4%B8%8B/MIS/chap0x0A/iotgoat_lua%E6%96%87%E4%BB%B6.png" alt=" ">  </p>
+<p> <img src="/2026/10/24/25%E5%B9%B43-6%E6%9C%88%E5%A4%A7%E4%B8%89%E4%B8%8B/MIS/chap0x0A/%E6%9F%A5%E7%9C%8Biotgoat_lua.png" alt=" ">  </p>
+</li>
+<li><p>在提取出来的固件文件中，尝试全局搜索定位<code>cmd</code>文件并查看  </p>
+<p> <img src="/2026/10/24/25%E5%B9%B43-6%E6%9C%88%E5%A4%A7%E4%B8%89%E4%B8%8B/MIS/chap0x0A/%E6%9F%A5%E7%9C%8Bcmd.png" alt=" ">  </p>
+<p> 发现这个是一个秘密开发者诊断页面  </p>
+<p> <img src="/2026/10/24/25%E5%B9%B43-6%E6%9C%88%E5%A4%A7%E4%B8%89%E4%B8%8B/MIS/chap0x0A/%E6%B5%8F%E8%A7%88%E5%99%A8%E6%9F%A5%E7%9C%8Bcmd.png" alt=" "></p>
+</li>
+</ol>
+<h3 id="实验三：Lack-of-Secure-Update-Mechanism"><a href="#实验三：Lack-of-Secure-Update-Mechanism" class="headerlink" title="实验三：Lack of Secure Update Mechanism"></a>实验三：Lack of Secure Update Mechanism</h3><ol>
+<li><p>查看IoTGoat所使用的openwrt的版本信息  </p>
+<p><img src="/2026/10/24/25%E5%B9%B43-6%E6%9C%88%E5%A4%A7%E4%B8%89%E4%B8%8B/MIS/chap0x0A/openwrt_Release.png" alt=" ">  </p>
+</li>
+<li><p>搜索openwrt的18.06.2版本存在的cve漏洞，发现如下较为严重的历史漏洞  </p>
+ <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">openwrt 18.06.2 cve vulnerability</span><br><span class="line">CVE-2019-19945 (Heap Overflow)</span><br><span class="line">CVE-2020-7248 (Buffer Overflow)</span><br><span class="line">CVE-2020-8597 (Buffer Overflow)</span><br><span class="line">CVE-2020-28951 (Malicious packages names)</span><br></pre></td></tr></table></figure>
+
+<p> <img src="/2026/10/24/25%E5%B9%B43-6%E6%9C%88%E5%A4%A7%E4%B8%89%E4%B8%8B/MIS/chap0x0A/%E6%90%9C%E7%B4%A218.06.2%E5%AD%98%E5%9C%A8%E7%9A%84cve%E6%BC%8F%E6%B4%9E.png" alt=" ">  </p>
+<p> <img src="/2026/10/24/25%E5%B9%B43-6%E6%9C%88%E5%A4%A7%E4%B8%89%E4%B8%8B/MIS/chap0x0A/openwrt.png" alt=" "></p>
+</li>
+</ol>
+<h2 id="问题与解决"><a href="#问题与解决" class="headerlink" title="问题与解决"></a>问题与解决</h2><p>暂无  </p>
+<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><ul>
+<li><a target="_blank" rel="noopener" href="https://scriptingxss.gitbook.io/firmware-security-testing-methodology">OWASP Firmware Security Testing Methodology</a>  </li>
+<li><a target="_blank" rel="noopener" href="https://cyber.vumetric.com/vulns/openwrt/openwrt/18-06-2/">Vulnerabilities &gt; Openwrt &gt; Openwrt &gt; 18.06.2</a></li>
+</ul>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="https://MarsMrx.github.io">MarsMrx</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="https://marsmrx.github.io/2026/10/24/25%E5%B9%B43-6%E6%9C%88%E5%A4%A7%E4%B8%89%E4%B8%8B/MIS/chap0x0A/">https://marsmrx.github.io/2026/10/24/25年3-6月大三下/MIS/chap0x0A/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来源 <a href="https://MarsMrx.github.io" target="_blank">MarsMrx's Blog</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/%E7%89%A9%E8%81%94%E7%BD%91%E5%AE%89%E5%85%A8/">物联网安全</a><a class="post-meta__tags" href="/tags/%E5%9B%BA%E4%BB%B6%E5%AE%89%E5%85%A8/">固件安全</a></div><div class="post-share"><div class="social-share" data-image="/img/cat-icon.png" data-sites="facebook,x,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related" href="/2026/10/24/25%E5%B9%B43-6%E6%9C%88%E5%A4%A7%E4%B8%89%E4%B8%8B/MIS/chap0x0B/" title="实验十一 IoTGoat 网络服务安全与协议模糊测试｜MIS"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info"><div class="info-1"><div class="info-item-1">上一篇</div><div class="info-item-2">实验十一 IoTGoat 网络服务安全与协议模糊测试｜MIS</div></div><div class="info-2"><div class="info-item-1">【大三下25年3-6月】围绕 IoTGoat 的网络服务开展安全分析，检查 SSH、DNS、后门与 Telnet 等服务，并使用 boofuzz 对 FTP 和 HTTP 协议进行模糊测试。</div></div></div></a><a class="pagination-related" href="/2026/10/23/25%E5%B9%B43-6%E6%9C%88%E5%A4%A7%E4%B8%89%E4%B8%8B/MIS/chap0x09/" title="实验九 CVE-2022-30024 固件静态分析与逆向分析｜MIS"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-right"><div class="info-1"><div class="info-item-1">下一篇</div><div class="info-item-2">实验九 CVE-2022-30024 固件静态分析与逆向分析｜MIS</div></div><div class="info-2"><div class="info-item-1">【大三下25年3-6月】围绕 CVE-2022-30024 开展物联网固件静态分析，结合漏洞资料、字符串定位与 Ghidra 逆向分析，追踪 httpd 组件中的缺陷函数及其栈溢出逻辑。</div></div></div></a></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><a class="pagination-related" href="/2026/10/24/25%E5%B9%B43-6%E6%9C%88%E5%A4%A7%E4%B8%89%E4%B8%8B/MIS/chap0x0B/" title="实验十一 IoTGoat 网络服务安全与协议模糊测试｜MIS"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-10-24</div><div class="info-item-2">实验十一 IoTGoat 网络服务安全与协议模糊测试｜MIS</div></div><div class="info-2"><div class="info-item-1">【大三下25年3-6月】围绕 IoTGoat 的网络服务开展安全分析，检查 SSH、DNS、后门与 Telnet 等服务，并使用 boofuzz 对 FTP 和 HTTP 协议进行模糊测试。</div></div></div></a><a class="pagination-related" href="/2026/10/24/25%E5%B9%B43-6%E6%9C%88%E5%A4%A7%E4%B8%89%E4%B8%8B/MIS/chap0x0C/" title="实验十二 基于 boofuzz 的 CVE-2022-30024 漏洞发现实践｜MIS"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-10-24</div><div class="info-item-2">实验十二 基于 boofuzz 的 CVE-2022-30024 漏洞发现实践｜MIS</div></div><div class="info-2"><div class="info-item-1">【大三下25年3-6月】使用 boofuzz 对 TP-Link 固件相关 HTTP 接口进行模糊测试，观察异常响应与崩溃现象，记录 CVE-2022-30024 漏洞的发现与分析过程。</div></div></div></a><a class="pagination-related" href="/2026/10/23/25%E5%B9%B43-6%E6%9C%88%E5%A4%A7%E4%B8%89%E4%B8%8B/MIS/chap0x08/" title="实验八 CVE-2022-30024 漏洞复现与栈溢出实践｜MIS"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-10-23</div><div class="info-item-2">实验八 CVE-2022-30024 漏洞复现与栈溢出实践｜MIS</div></div><div class="info-2"><div class="info-item-1">【大三下25年3-6月】在 Ubuntu 与 Kali 环境中复现 TP-Link 固件 CVE-2022-30024 缓冲区溢出漏洞，并扩展实践栈溢出利用，记录 Burp Suite、IDA 与 checksec 等工具的使用。</div></div></div></a><a class="pagination-related" href="/2026/10/23/25%E5%B9%B43-6%E6%9C%88%E5%A4%A7%E4%B8%89%E4%B8%8B/MIS/chap0x09/" title="实验九 CVE-2022-30024 固件静态分析与逆向分析｜MIS"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-10-23</div><div class="info-item-2">实验九 CVE-2022-30024 固件静态分析与逆向分析｜MIS</div></div><div class="info-2"><div class="info-item-1">【大三下25年3-6月】围绕 CVE-2022-30024 开展物联网固件静态分析，结合漏洞资料、字符串定位与 Ghidra 逆向分析，追踪 httpd 组件中的缺陷函数及其栈溢出逻辑。</div></div></div></a><a class="pagination-related" href="/2026/10/23/25%E5%B9%B43-6%E6%9C%88%E5%A4%A7%E4%B8%89%E4%B8%8B/MIS/chap0x07/" title="实验七 物联网固件安全基础｜MIS"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-10-23</div><div class="info-item-2">实验七 物联网固件安全基础｜MIS</div></div><div class="info-2"><div class="info-item-1">【大三下25年3-6月】以 D-Link 路由器固件为例，使用 binwalk 等工具开展固件提取与分析，并通过 FAT 完成系统态固件仿真，初步了解物联网固件安全研究流程。</div></div></div></a></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/img/cat-icon.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">MarsMrx</div><div class="author-info-description">的小窝U•ェ•*U
+</div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">24</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">15</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">5</div></a></div><div class="card-info-social-icons"><a class="social-icon" href="https://github.com/MarsMrx" target="_blank" title="Github"><i class="fab fa-github"></i></a><a class="social-icon" href="mailto:3536663251@qq.com" target="_blank" title="Email"><i class="fas fa-envelope"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">This is my Blog</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content is-expand"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%AE%9E%E9%AA%8C%E4%B9%9D%EF%BC%9AIoTGoat-%E5%9B%BA%E4%BB%B6%E9%9D%99%E6%80%81%E5%AE%89%E5%85%A8%E5%88%86%E6%9E%90"><span class="toc-text">实验九：IoTGoat 固件静态安全分析</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%9E%E9%AA%8C%E4%BB%BB%E5%8A%A1"><span class="toc-text">实验任务</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%9E%E9%AA%8C%E7%8E%AF%E5%A2%83"><span class="toc-text">实验环境</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%9E%E9%AA%8C%E5%86%85%E5%AE%B9"><span class="toc-text">实验内容</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#IoTGoat-%E5%AE%89%E8%A3%85%E4%B8%8E%E9%85%8D%E7%BD%AE"><span class="toc-text">IoTGoat 安装与配置</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#IOTGoat-%E4%BD%BF%E7%94%A8"><span class="toc-text">IOTGoat 使用</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#IoTGoat%E5%88%86%E6%9E%90"><span class="toc-text">IoTGoat分析</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%AE%9E%E9%AA%8C%E4%B8%80%EF%BC%9A%E5%88%86%E6%9E%90-Weak-Guessable-or-Hardcoded-Passwords"><span class="toc-text">实验一：分析 Weak Guessable or Hardcoded Passwords</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%AE%9E%E9%AA%8C%E4%BA%8C%EF%BC%9AInsecure-Ecosystem-Interfaces"><span class="toc-text">实验二：Insecure Ecosystem Interfaces</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%AE%9E%E9%AA%8C%E4%B8%89%EF%BC%9ALack-of-Secure-Update-Mechanism"><span class="toc-text">实验三：Lack of Secure Update Mechanism</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%97%AE%E9%A2%98%E4%B8%8E%E8%A7%A3%E5%86%B3"><span class="toc-text">问题与解决</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8F%82%E8%80%83%E8%B5%84%E6%96%99"><span class="toc-text">参考资料</span></a></li></ol></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/10/24/25%E5%B9%B43-6%E6%9C%88%E5%A4%A7%E4%B8%89%E4%B8%8B/MIS/chap0x0C/" title="实验十二 基于 boofuzz 的 CVE-2022-30024 漏洞发现实践｜MIS">实验十二 基于 boofuzz 的 CVE-2022-30024 漏洞发现实践｜MIS</a><time datetime="2026-10-23T16:40:00.000Z" title="发表于 2026-10-24 00:40:00">2026-10-24</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/10/24/25%E5%B9%B43-6%E6%9C%88%E5%A4%A7%E4%B8%89%E4%B8%8B/MIS/chap0x0B/" title="实验十一 IoTGoat 网络服务安全与协议模糊测试｜MIS">实验十一 IoTGoat 网络服务安全与协议模糊测试｜MIS</a><time datetime="2026-10-23T16:35:00.000Z" title="发表于 2026-10-24 00:35:00">2026-10-24</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/10/24/25%E5%B9%B43-6%E6%9C%88%E5%A4%A7%E4%B8%89%E4%B8%8B/MIS/chap0x0A/" title="实验十 IoTGoat 固件静态安全分析｜MIS">实验十 IoTGoat 固件静态安全分析｜MIS</a><time datetime="2026-10-23T16:30:00.000Z" title="发表于 2026-10-24 00:30:00">2026-10-24</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/10/23/25%E5%B9%B43-6%E6%9C%88%E5%A4%A7%E4%B8%89%E4%B8%8B/MIS/chap0x09/" title="实验九 CVE-2022-30024 固件静态分析与逆向分析｜MIS">实验九 CVE-2022-30024 固件静态分析与逆向分析｜MIS</a><time datetime="2026-10-22T16:20:00.000Z" title="发表于 2026-10-23 00:20:00">2026-10-23</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/10/23/25%E5%B9%B43-6%E6%9C%88%E5%A4%A7%E4%B8%89%E4%B8%8B/MIS/chap0x08/" title="实验八 CVE-2022-30024 漏洞复现与栈溢出实践｜MIS">实验八 CVE-2022-30024 漏洞复现与栈溢出实践｜MIS</a><time datetime="2026-10-22T16:15:00.000Z" title="发表于 2026-10-23 00:15:00">2026-10-23</time></div></div></div></div></div></div></main><footer id="footer" style="background-image: url(/img/banner_img.png);"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2025 - 2026 By MarsMrx</span><span class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo 7.3.0</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly 5.5.3</a></span></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=5.5.3"></script><script src="/js/main.js?v=5.5.3"></script><div class="js-pjax"></div><script src="/js/archive-collapse.js"></script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>

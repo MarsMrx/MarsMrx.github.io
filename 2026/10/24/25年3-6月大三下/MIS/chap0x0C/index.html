@@ -1,0 +1,256 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>实验十二 基于 boofuzz 的 CVE-2022-30024 漏洞发现实践｜MIS | MarsMrx's Blog</title><meta name="author" content="MarsMrx"><meta name="copyright" content="MarsMrx"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="【大三下25年3-6月】使用 boofuzz 对 TP-Link 固件相关 HTTP 接口进行模糊测试，观察异常响应与崩溃现象，记录 CVE-2022-30024 漏洞的发现与分析过程。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="实验十二 基于 boofuzz 的 CVE-2022-30024 漏洞发现实践｜MIS">
+<meta property="og:url" content="https://marsmrx.github.io/2026/10/24/25%E5%B9%B43-6%E6%9C%88%E5%A4%A7%E4%B8%89%E4%B8%8B/MIS/chap0x0C/index.html">
+<meta property="og:site_name" content="MarsMrx&#39;s Blog">
+<meta property="og:description" content="【大三下25年3-6月】使用 boofuzz 对 TP-Link 固件相关 HTTP 接口进行模糊测试，观察异常响应与崩溃现象，记录 CVE-2022-30024 漏洞的发现与分析过程。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://marsmrx.github.io/img/cat-icon.png">
+<meta property="article:published_time" content="2026-10-23T16:40:00.000Z">
+<meta property="article:modified_time" content="2026-10-24T07:36:31.312Z">
+<meta property="article:author" content="MarsMrx">
+<meta property="article:tag" content="物联网安全">
+<meta property="article:tag" content="固件安全">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://marsmrx.github.io/img/cat-icon.png"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "实验十二 基于 boofuzz 的 CVE-2022-30024 漏洞发现实践｜MIS",
+  "url": "https://marsmrx.github.io/2026/10/24/25%E5%B9%B43-6%E6%9C%88%E5%A4%A7%E4%B8%89%E4%B8%8B/MIS/chap0x0C/",
+  "image": "https://marsmrx.github.io/img/cat-icon.png",
+  "datePublished": "2026-10-23T16:40:00.000Z",
+  "dateModified": "2026-10-24T07:36:31.312Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "MarsMrx",
+      "url": "https://MarsMrx.github.io"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/img/favicon-cat.png"><link rel="canonical" href="https://marsmrx.github.io/2026/10/24/25%E5%B9%B43-6%E6%9C%88%E5%A4%A7%E4%B8%89%E4%B8%8B/MIS/chap0x0C/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css?v=5.5.3"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.1.0/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.12.0/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: false,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '实验十二 基于 boofuzz 的 CVE-2022-30024 漏洞发现实践｜MIS',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><link rel="stylesheet" href="/css/custom.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lxgw-wenkai-screen-webfont@1.7.0/style.css"><meta name="generator" content="Hexo 7.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/img/cat-icon.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">24</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">15</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">5</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div><div class="menus_item"><a class="site-page" href="/categories/Paper/"><i class="fa-fw fas fa-file-alt"></i><span> Paper</span></a></div><div class="menus_item"><a class="site-page" href="/quote/"><i class="fa-fw fas fa-quote-left"></i><span> Quote</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> About</span></a></div><div class="menus_item"><a class="site-page" href="/showcase/"><i class="fa-fw fas fa-laptop-code"></i><span> 演示馆</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url(/img/banner_img.png);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><span class="site-name">MarsMrx's Blog</span></a><a class="nav-page-title" href="/"><span class="site-name">实验十二 基于 boofuzz 的 CVE-2022-30024 漏洞发现实践｜MIS</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  返回首页</span></span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div><div class="menus_item"><a class="site-page" href="/categories/Paper/"><i class="fa-fw fas fa-file-alt"></i><span> Paper</span></a></div><div class="menus_item"><a class="site-page" href="/quote/"><i class="fa-fw fas fa-quote-left"></i><span> Quote</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> About</span></a></div><div class="menus_item"><a class="site-page" href="/showcase/"><i class="fa-fw fas fa-laptop-code"></i><span> 演示馆</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">实验十二 基于 boofuzz 的 CVE-2022-30024 漏洞发现实践｜MIS</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-10-23T16:40:00.000Z" title="发表于 2026-10-24 00:40:00">2026-10-24</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-10-24T07:36:31.312Z" title="更新于 2026-10-24 15:36:31">2026-10-24</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/MIS/">MIS</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><h1 id="实验十一：基于-boofuzz-的-CVE-2022-30024-漏洞发现实践"><a href="#实验十一：基于-boofuzz-的-CVE-2022-30024-漏洞发现实践" class="headerlink" title="实验十一：基于 boofuzz 的 CVE-2022-30024 漏洞发现实践"></a>实验十一：基于 boofuzz 的 CVE-2022-30024 漏洞发现实践</h1><h2 id="实验环境"><a href="#实验环境" class="headerlink" title="实验环境"></a>实验环境</h2><ul>
+<li>Ubuntu  </li>
+<li>boofuzz</li>
+</ul>
+<h2 id="实验任务"><a href="#实验任务" class="headerlink" title="实验任务"></a>实验任务</h2><ul>
+<li><input checked="" disabled="" type="checkbox"> 完成实验一：使⽤ boofuzz 尝试发现 CVE 2022-30024 漏洞</li>
+</ul>
+<p><strong>要求:</strong>  </p>
+<ul>
+<li>完成针对 CVE-2022-30024 漏洞进⾏模糊测试的 boofuzz 脚本  </li>
+<li>运⾏该 boofuzz 脚本，并尝试发现 CVE-2022-30024 漏洞  </li>
+<li>捕获模糊测试过程中的所有完整通信流量，分析并从其中找出是哪⼀条数据报⽂导致了⽬标固件崩溃？并给出推断理由</li>
+</ul>
+<p><strong>注意事项</strong>  </p>
+<ol>
+<li>尝试在 boofuzz 脚本中定义要进行模糊测试的协议格式<br>在定义协议格式的时候，不要携带攻击负载</li>
+<li>尝试在 boofuzz 脚本中定义要进行变异的字段<br>最好不要针对性只模糊测试一个字段，需要假设你在不知道这个漏洞的情况下进行挖掘</li>
+<li>尝试在 boofuzz 脚本中定义认证字段<br>判断是否需要先完成登录授权才能利用漏洞</li>
+<li>尝试在 boofuzz 脚本中定义异常监控方法<br>如何判定触发漏洞</li>
+</ol>
+<h2 id="实验内容"><a href="#实验内容" class="headerlink" title="实验内容"></a>实验内容</h2><p>CVE-2022-30024</p>
+<blockquote>
+<p>这是一个基于栈的缓冲区溢出，存在于二进制程序httpd（提供web服务）的ipAddrDispose函数中。漏洞发生在将 GET 请求的参数值分配给栈变量的过程中，该过程允许用户向栈内存中输入大量数据，而这些数据攻击者可控<br>参数从PingIframeRpm接口传递，溢出参数位置是ping_addr，影响ipAddrDispose函数  </p>
+</blockquote>
+<p>boofuzz  </p>
+<blockquote>
+<p>boofuzz是针对Session进行模糊测试的,然后定义请求包，请求包的构成分为三个单位：包(Message)、块(Block)以及原语(Primitives)</p>
+</blockquote>
+<h3 id="实验一：使用-boofuzz-尝试发现-CVE-2022-30024-漏洞"><a href="#实验一：使用-boofuzz-尝试发现-CVE-2022-30024-漏洞" class="headerlink" title="实验一：使用 boofuzz 尝试发现 CVE-2022-30024 漏洞"></a>实验一：使用 boofuzz 尝试发现 CVE-2022-30024 漏洞</h3><p><strong>1.环境准备</strong>  </p>
+<p>使用之前的基于docker的漏洞复现环境，准备好漏洞环境TP-LINK仿真的固件  </p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 直接重启之前的漏洞环境容器</span></span><br><span class="line">docker start hungry_golick</span><br><span class="line"><span class="comment"># 由于做实验时不是一气呵成的，断断续续的，这个端口号存在变化🥹</span></span><br></pre></td></tr></table></figure>
+
+<p><img src="/2026/10/24/25%E5%B9%B43-6%E6%9C%88%E5%A4%A7%E4%B8%89%E4%B8%8B/MIS/chap0x0C/docker%E5%AE%B9%E5%99%A8.png" alt=" ">  </p>
+<p>访问浏览器界面，获取<code>cookie</code>和登录后浏览器跳转链接中的<code>认证字段</code>  </p>
+<p><img src="/2026/10/24/25%E5%B9%B43-6%E6%9C%88%E5%A4%A7%E4%B8%89%E4%B8%8B/MIS/chap0x0C/tp-link.png" alt=" ">  </p>
+<p><strong>编写模糊测试脚本</strong>  </p>
+<ul>
+<li>此处设置了多个变异字段<code>fuzzable=False</code>,因为时间原因，多个变异字段的测试用例太多，运行过程中，各种因素不太稳定。所以有点上帝视角只对<code>ping_addr</code>字段进行了测试。当然可以设置<code>fuzzable=True</code>来进行多个变异字段进行测试</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> socket</span><br><span class="line"><span class="keyword">from</span> boofuzz <span class="keyword">import</span>*</span><br><span class="line"></span><br><span class="line"><span class="comment"># 异常检测函数</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">check_response</span>(<span class="params">target, fuzz_data_logger, session, *args, **kwargs</span>):</span><br><span class="line">    fuzz_data_logger.log_info(<span class="string">&quot;Checking for response ...&quot;</span>)</span><br><span class="line">    <span class="keyword">try</span>:</span><br><span class="line">        response = target.recv(<span class="number">1024</span>) <span class="comment"># 接受响应数据</span></span><br><span class="line">    <span class="keyword">except</span>:</span><br><span class="line">        fuzz_data_logger.log_fail(<span class="string">&quot;Unable to connect ...&quot;</span>)</span><br><span class="line">        <span class="keyword">return</span></span><br><span class="line">    <span class="keyword">if</span> <span class="keyword">not</span> response: <span class="comment"># 响应为空</span></span><br><span class="line">        fuzz_data_logger.log_fail(<span class="string">&quot;Empty response ...&quot;</span>)</span><br><span class="line">        target.close()</span><br><span class="line">        <span class="keyword">return</span></span><br><span class="line">    fuzz_data_logger.log_info(<span class="string">&quot;Start checking ...\n&quot;</span> + response.decode())</span><br><span class="line">    target.close()</span><br><span class="line">    <span class="keyword">return</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment"># 构建模糊测试请求</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">build_multi_field_fuzz_request</span>(<span class="params">target_ip, target_port, random_path, auth_cookie</span>):</span><br><span class="line">    session = Session(</span><br><span class="line">        target=Target(connection=TCPSocketConnection(target_ip, target_port)),</span><br><span class="line">        post_test_case_callbacks=[check_response]</span><br><span class="line">    )</span><br><span class="line"></span><br><span class="line">    s_initialize(name=<span class="string">&quot;Full HTTP GET Request with Query String&quot;</span>)</span><br><span class="line"></span><br><span class="line">    <span class="comment"># ========== HTTP 请求行和头部 ==========</span></span><br><span class="line">    <span class="keyword">with</span> s_block(<span class="string">&quot;Request-Line&quot;</span>):</span><br><span class="line">        s_group(<span class="string">&quot;Method&quot;</span>, values=[<span class="string">&quot;GET&quot;</span>])</span><br><span class="line">        s_delim(<span class="string">&quot; &quot;</span>, name=<span class="string">&quot;space-1&quot;</span>)</span><br><span class="line">        s_string(<span class="string">f&quot;/<span class="subst">&#123;random_path&#125;</span>/userRpm/PingIframeRpm.htm&quot;</span>, name=<span class="string">&quot;URI&quot;</span>)</span><br><span class="line">        s_delim(<span class="string">&quot;?&quot;</span>, name=<span class="string">&quot;question-mark&quot;</span>)  <span class="comment"># 添加 &#x27;?&#x27; 分隔符</span></span><br><span class="line">        </span><br><span class="line">        <span class="keyword">with</span> s_block(<span class="string">&quot;Query-String&quot;</span>):  <span class="comment"># 开始 query string block</span></span><br><span class="line"></span><br><span class="line">            <span class="comment"># ========== Query String 参数 ==========可选进行模糊</span></span><br><span class="line">            s_static(<span class="string">&quot;doType=&quot;</span>)</span><br><span class="line">            s_string(<span class="string">&quot;ping&quot;</span>, name=<span class="string">&quot;doType&quot;</span>, fuzzable=<span class="literal">False</span>)</span><br><span class="line">            s_delim(<span class="string">&quot;&amp;&quot;</span>, name=<span class="string">&quot;and-1&quot;</span>)</span><br><span class="line"></span><br><span class="line">            s_static(<span class="string">&quot;isNew=&quot;</span>)</span><br><span class="line">            s_string(<span class="string">&quot;new&quot;</span>, name=<span class="string">&quot;isNew&quot;</span>, fuzzable=<span class="literal">False</span>)</span><br><span class="line">            s_delim(<span class="string">&quot;&amp;&quot;</span>, name=<span class="string">&quot;and-2&quot;</span>)</span><br><span class="line"></span><br><span class="line">            s_static(<span class="string">&quot;sendNum=&quot;</span>)</span><br><span class="line">            s_string(<span class="string">&quot;4&quot;</span>, name=<span class="string">&quot;sendNum&quot;</span>, fuzzable=<span class="literal">False</span>)</span><br><span class="line">            s_delim(<span class="string">&quot;&amp;&quot;</span>, name=<span class="string">&quot;and-3&quot;</span>)</span><br><span class="line"></span><br><span class="line">            s_static(<span class="string">&quot;pSize=&quot;</span>)</span><br><span class="line">            s_string(<span class="string">&quot;64&quot;</span>, name=<span class="string">&quot;pSize&quot;</span>, fuzzable=<span class="literal">False</span>)</span><br><span class="line">            s_delim(<span class="string">&quot;&amp;&quot;</span>, name=<span class="string">&quot;and-4&quot;</span>)</span><br><span class="line"></span><br><span class="line">            s_static(<span class="string">&quot;overTime=&quot;</span>)</span><br><span class="line">            s_string(<span class="string">&quot;800&quot;</span>, name=<span class="string">&quot;overTime&quot;</span>, fuzzable=<span class="literal">False</span>)</span><br><span class="line">            s_delim(<span class="string">&quot;&amp;&quot;</span>, name=<span class="string">&quot;and-5&quot;</span>)</span><br><span class="line"></span><br><span class="line">            s_static(<span class="string">&quot;trHops=&quot;</span>)</span><br><span class="line">            s_string(<span class="string">&quot;20&quot;</span>, name=<span class="string">&quot;trHops&quot;</span>, fuzzable=<span class="literal">False</span>)</span><br><span class="line">            s_delim(<span class="string">&quot;&amp;&quot;</span>, name=<span class="string">&quot;and-6&quot;</span>)</span><br><span class="line"></span><br><span class="line">            s_static(<span class="string">&quot;ping_addr=&quot;</span>)</span><br><span class="line">            s_string(<span class="string">&quot;b&quot;</span>*<span class="number">50</span>,name=<span class="string">&quot;ping_addr&quot;</span>,fuzzable=<span class="literal">True</span>,max_len=<span class="number">100</span>)</span><br><span class="line"></span><br><span class="line">        s_delim(<span class="string">&quot; &quot;</span>, name=<span class="string">&quot;space-2&quot;</span>)</span><br><span class="line">        s_string(<span class="string">&quot;HTTP/1.1&quot;</span>, name=<span class="string">&quot;Protocol&quot;</span>)</span><br><span class="line">        s_static(<span class="string">&quot;\r\n&quot;</span>, name=<span class="string">&quot;CRLF&quot;</span>)</span><br><span class="line"></span><br><span class="line">    <span class="comment"># ========== HTTP Headers ==========</span></span><br><span class="line">    s_static(<span class="string">f&quot;Host: <span class="subst">&#123;target_ip&#125;</span>:<span class="subst">&#123;target_port&#125;</span>\r\n&quot;</span>)</span><br><span class="line">    s_static(<span class="string">&quot;User-Agent: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:98.0) Gecko/20100101 Firefox/98.0\r\n&quot;</span>)</span><br><span class="line">    s_static(<span class="string">&quot;Accept-Encoding: gzip, deflate\r\n&quot;</span>)</span><br><span class="line">    s_static(<span class="string">&quot;Connection: keep-alive\r\n&quot;</span>)</span><br><span class="line">    s_static(<span class="string">f&quot;Referer: http://<span class="subst">&#123;target_ip&#125;</span>:<span class="subst">&#123;target_port&#125;</span>/<span class="subst">&#123;random_path&#125;</span>/userRpm/PingIframeRpm.htm\r\n&quot;</span>)</span><br><span class="line">    s_static(<span class="string">f&quot;Cookie: Authorization=<span class="subst">&#123;auth_cookie&#125;</span>\r\n&quot;</span>) <span class="comment"># 添加 cookie认证</span></span><br><span class="line">    s_static(<span class="string">&quot;\r\n&quot;</span>, name=<span class="string">&quot;Request-Terminator&quot;</span>)</span><br><span class="line"></span><br><span class="line">    <span class="comment"># ========== 注册这个完整的请求用于 fuzz ==========</span></span><br><span class="line">    session.connect(s_get(<span class="string">&quot;Full HTTP GET Request with Query String&quot;</span>))</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> session</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">&quot;__main__&quot;</span>:</span><br><span class="line">    target_ip = <span class="string">&quot;10.0.2.10&quot;</span></span><br><span class="line">    target_port = <span class="number">32777</span></span><br><span class="line"></span><br><span class="line">    auth_cookie = <span class="string">&#x27;Basic%20YWRtaW46MjEyMzJmMjk3YTU3YTVhNzQzODk0YTBlNGE4MDFmYzM%3D&#x27;</span></span><br><span class="line">    random_path = <span class="string">&#x27;FFETSZIBAGFBLBAB&#x27;</span></span><br><span class="line"></span><br><span class="line">    <span class="built_in">print</span>(<span class="string">&quot;[*] 开始构建 Fuzz 测试用例...&quot;</span>)</span><br><span class="line">    sess = build_multi_field_fuzz_request(target_ip, target_port, random_path, auth_cookie)</span><br><span class="line"></span><br><span class="line">    <span class="built_in">print</span>(<span class="string">&quot;[*] 开始模糊测试... (按 Ctrl+C 中断)&quot;</span>)</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">try</span>:</span><br><span class="line">        sess.fuzz()</span><br><span class="line">    <span class="keyword">except</span> KeyboardInterrupt:</span><br><span class="line">        <span class="built_in">print</span>(<span class="string">&quot;[*] 用户中断测试。&quot;</span>)</span><br></pre></td></tr></table></figure>
+
+<p><strong>2.进行模糊测试</strong>  </p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 开启抓包</span></span><br><span class="line">tshark -i <span class="built_in">any</span> -w curl1.pcap</span><br><span class="line"></span><br><span class="line"><span class="comment"># 运行boofuzz</span></span><br><span class="line">python3 fuzz1.py</span><br></pre></td></tr></table></figure>
+
+<p><img src="/2026/10/24/25%E5%B9%B43-6%E6%9C%88%E5%A4%A7%E4%B8%89%E4%B8%8B/MIS/chap0x0C/%E6%8A%93%E5%8C%85%E5%92%8C%E6%A8%A1%E7%B3%8A%E6%B5%8B%E8%AF%95.png" alt=" ">  </p>
+<p>测试过程中，出现了<code>check Failed:Empty response</code>，目标连接断开，逐渐无响应，在浏览器上查看，发现出现了crash的测试用例，这里看到的发送的请求中<code>ping_addr</code>是一串<code>b</code>，跟之前手动复现漏洞时所用的poc类似，推测是缓冲区溢出导致了目标崩溃  </p>
+<p><img src="/2026/10/24/25%E5%B9%B43-6%E6%9C%88%E5%A4%A7%E4%B8%89%E4%B8%8B/MIS/chap0x0C/%E6%B5%8F%E8%A7%88%E5%99%A8%E7%9C%8B%E5%88%B0crash%E4%BA%8B%E4%BB%B6.png" alt=" "></p>
+<p><strong>3.流量分析</strong><br>使用wireshark分析捕获的流量包，过滤后，看到那条导致连接中断的http流量包  </p>
+<ul>
+<li>在它之前存在，有tcp三次握手建立连接的流量</li>
+<li>在它之后，tcp连接发生了四次挥手断开连接</li>
+</ul>
+<p><img src="/2026/10/24/25%E5%B9%B43-6%E6%9C%88%E5%A4%A7%E4%B8%89%E4%B8%8B/MIS/chap0x0C/%E6%B5%81%E9%87%8F%E5%88%86%E6%9E%90.png" alt=" ">  </p>
+<p>具体查看<code>http</code>流量包，发现了触发漏洞的<code>ping_addr</code></p>
+<p><img src="/2026/10/24/25%E5%B9%B43-6%E6%9C%88%E5%A4%A7%E4%B8%89%E4%B8%8B/MIS/chap0x0C/%E5%AE%9A%E4%BD%8Dhttp%E6%B5%81%E9%87%8F.png" alt=" ">  </p>
+<hr>
+<h3 id="思考-扩展"><a href="#思考-扩展" class="headerlink" title="思考(扩展)"></a>思考(扩展)</h3><p>1.如果你在不知道漏洞存在于哪个固件的哪个接口的情况下，你应该如何挖掘未知漏洞？你的思路是什么？<br>通过“信息收集 → 接口探测 → 协议分析 → 漏洞验证”四步流程挖掘潜在漏洞：</p>
+<ul>
+<li><strong>信息收集</strong>：使用 Nmap 扫描端口、WhatWeb 指纹识别，并结合 CVE 数据库和 GitHub 分析已有安全问题；</li>
+<li><strong>接口探测</strong>：借助 Wireshark 抓包、Scapy 协议重放，识别潜在 Web&#x2F;API 接口；</li>
+<li><strong>模糊测试</strong>：利用 Burp Suite、boofuzz 或 AFLNet 对 HTTP 参数、Cookie、二进制输入等字段进行变异测试；</li>
+<li><strong>漏洞验证</strong>：结合 GDB 调试器定位异常，结合业务逻辑挖掘越权、信息泄露等漏洞。</li>
+</ul>
+<p>2.你认为在你刚刚的思路中，难点或者挑战是什么？  </p>
+<ul>
+<li><strong>资产隐藏深</strong>：存在非标准端口、自定义协议等，攻击面难以全面覆盖；</li>
+<li><strong>测试复杂性高</strong>：协议逆向与模糊测试用例构造难度大，存在误报&#x2F;漏报风险；</li>
+<li><strong>验证门槛高</strong>：需识别服务崩溃类型或理解复杂业务逻辑以确认漏洞。</li>
+</ul>
+<p>3.你认为这些难点或者挑战可能可以如何解决？  </p>
+<ul>
+<li><strong>资产补全</strong>：结合 Nmap 脚本和蜜罐部署，结合被动流量分析发现隐藏服务；</li>
+<li><strong>测试提效</strong>：借助 Frida 等工具动态追踪协议结构，结合 AI 辅助生成用例，并通过 AFL 等工具分析覆盖率优化测试路径；</li>
+<li><strong>验证辅助</strong>：构建 Docker 仿真环境 + 自动化脚本辅助分类漏洞，参考社区漏洞样本提升验证效率和准确性。</li>
+</ul>
+<h2 id="问题与解决"><a href="#问题与解决" class="headerlink" title="问题与解决"></a>问题与解决</h2><p>1.因为环境问题，我的漏洞复现的环境中，在web页面输入完用户名和密码之后需要等待2分钟左右才会出现新的带有认证字段的跳转链接，所以基于request+正则匹配的方式无法得到那个字段。图中所示，是curl命令的响应输出中，有一段浏览器重定向到<code>http://192.168.0.1</code>的js代码，正常需要等待约2分钟，才会得到最终的跳转链接。但是request只能处理服务器返回的原始 HTML 内容，不会执行其中的 JavaScript。所以放弃了从登录开始的fuzz，选择手动获取cookie和认证字段之后，进行模糊测试。  </p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">login_and_get_session</span>():</span><br><span class="line">    login_url = <span class="string">&quot;http://10.0.2.10:32769/userRpm/LoginRpm.htm&quot;</span></span><br><span class="line">    payload = &#123;</span><br><span class="line">        <span class="string">&#x27;Username&#x27;</span>: <span class="string">&#x27;admin&#x27;</span>,</span><br><span class="line">        <span class="string">&#x27;Password&#x27;</span>: <span class="string">&#x27;admin&#x27;</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    session = requests.Session()</span><br><span class="line">    response = session.post(login_url, data=payload)</span><br><span class="line">    <span class="built_in">print</span>(response.text)</span><br><span class="line">    <span class="built_in">print</span>(response)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> response.status_code == <span class="number">200</span>:</span><br><span class="line">        <span class="comment"># 提取 HTML 内容</span></span><br><span class="line">        html_content = response.text</span><br><span class="line"></span><br><span class="line">        <span class="comment"># 匹配随机路径（16位大写字母）</span></span><br><span class="line">        <span class="keyword">match</span> = re.search(<span class="string">r&#x27;([A-Z]&#123;16&#125;)&#x27;</span>, html_content)</span><br><span class="line">        <span class="keyword">if</span> <span class="keyword">not</span> <span class="keyword">match</span>:</span><br><span class="line">            <span class="keyword">raise</span> Exception(<span class="string">&quot;未找到随机路径&quot;</span>)</span><br><span class="line"></span><br><span class="line">        random_path = <span class="keyword">match</span>.group(<span class="number">1</span>)</span><br><span class="line">        <span class="built_in">print</span>(<span class="string">f&quot;[+] 成功提取随机路径: <span class="subst">&#123;random_path&#125;</span>&quot;</span>)</span><br></pre></td></tr></table></figure>
+
+<p><img src="/2026/10/24/25%E5%B9%B43-6%E6%9C%88%E5%A4%A7%E4%B8%89%E4%B8%8B/MIS/chap0x0C/js%E8%A7%A6%E5%8F%91.png" alt=" "><br><img src="/2026/10/24/25%E5%B9%B43-6%E6%9C%88%E5%A4%A7%E4%B8%89%E4%B8%8B/MIS/chap0x0C/%E6%89%BE%E4%B8%8D%E5%88%B0%E8%AE%A4%E8%AF%81%E5%AD%97%E6%AE%B5.png" alt=" ">  </p>
+<p>总结就是常规HTTP请求获取无法在当前任务中获取完整的有效URL。可能的解决办法，采用Selenium模拟浏览器的行为(未尝试)<br>2. 尝试利用boofuzz官方提供的监控程序，运行process_monitor_unix.py,但是遇到了很多问题，还未解决  </p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 这种方式报错，没有pid属性</span></span><br><span class="line">procmon = ProcessMonitor(host=<span class="string">&#x27;0.0.0.0&#x27;</span>,port=26002)</span><br><span class="line">session = Session(</span><br><span class="line">  target=Target(</span><br><span class="line">      connection=TCPSocketConnection(IP, PORT),    </span><br><span class="line">      monitors=[procmon] </span><br><span class="line">  )</span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 这种会报错，no set_options属性</span></span><br><span class="line">monitor_client = pedrpc.Client(host=<span class="string">&quot;127.0.0.1&quot;</span>, port=26002)</span><br><span class="line">session = Session(</span><br><span class="line">  target=Target(</span><br><span class="line">      connection=TCPSocketConnection(IP, PORT),</span><br><span class="line">      monitors=[monitor_client]  <span class="comment"># 使用 pedrpc.Client 替代 ProcessMonitor</span></span><br><span class="line">  )</span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+
+<p><img src="/2026/10/24/25%E5%B9%B43-6%E6%9C%88%E5%A4%A7%E4%B8%89%E4%B8%8B/MIS/chap0x0C/no-pid.png" alt=" ">  </p>
+<p><img src="/2026/10/24/25%E5%B9%B43-6%E6%9C%88%E5%A4%A7%E4%B8%89%E4%B8%8B/MIS/chap0x0C/no-set-options.png" alt=" ">  </p>
+<h2 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h2><ul>
+<li><a target="_blank" rel="noopener" href="https://blog.csdn.net/song_lee/article/details/104334096">IoT 设备网络协议模糊测试工具boofuzz实战</a>  </li>
+<li><a target="_blank" rel="noopener" href="https://www.iotsec-zone.com/article/322">boofuzz 源码笔记（一）</a>  </li>
+<li><a target="_blank" rel="noopener" href="https://lkliki.github.io/2023/10/30/BooFuzz%E5%85%A5%E9%97%A8-Vivotek%E6%91%84%E5%83%8F%E5%A4%B4%E6%A0%88%E6%BA%A2%E5%87%BA%E6%BC%8F%E6%B4%9E/">BooFuzz入门-Vivotek摄像头栈溢出漏洞</a></li>
+<li><a target="_blank" rel="noopener" href="https://blog.csdn.net/song_lee/article/details/104334096">IoT 设备网络协议模糊测试工具boofuzz实战</a>  </li>
+<li><a target="_blank" rel="noopener" href="https://www.voycn.com/article/iot-shebeiwangluoxieyimohuceshigongjuboofuzzshizhan">IoT设备网络协议模糊测试工具boofuzz实战</a>  </li>
+<li><a target="_blank" rel="noopener" href="https://cvefeed.io/vuln/detail/CVE-2022-30024">CVE-2022-30024 TP-Link TL-WR841N HTTPd Daemon Buffer Overflow</a></li>
+</ul>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="https://MarsMrx.github.io">MarsMrx</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="https://marsmrx.github.io/2026/10/24/25%E5%B9%B43-6%E6%9C%88%E5%A4%A7%E4%B8%89%E4%B8%8B/MIS/chap0x0C/">https://marsmrx.github.io/2026/10/24/25年3-6月大三下/MIS/chap0x0C/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来源 <a href="https://MarsMrx.github.io" target="_blank">MarsMrx's Blog</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/%E7%89%A9%E8%81%94%E7%BD%91%E5%AE%89%E5%85%A8/">物联网安全</a><a class="post-meta__tags" href="/tags/%E5%9B%BA%E4%BB%B6%E5%AE%89%E5%85%A8/">固件安全</a></div><div class="post-share"><div class="social-share" data-image="/img/cat-icon.png" data-sites="facebook,x,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related full-width" href="/2026/10/24/25%E5%B9%B43-6%E6%9C%88%E5%A4%A7%E4%B8%89%E4%B8%8B/MIS/chap0x0B/" title="实验十一 IoTGoat 网络服务安全与协议模糊测试｜MIS"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-right"><div class="info-1"><div class="info-item-1">下一篇</div><div class="info-item-2">实验十一 IoTGoat 网络服务安全与协议模糊测试｜MIS</div></div><div class="info-2"><div class="info-item-1">【大三下25年3-6月】围绕 IoTGoat 的网络服务开展安全分析，检查 SSH、DNS、后门与 Telnet 等服务，并使用 boofuzz 对 FTP 和 HTTP 协议进行模糊测试。</div></div></div></a></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><a class="pagination-related" href="/2026/10/24/25%E5%B9%B43-6%E6%9C%88%E5%A4%A7%E4%B8%89%E4%B8%8B/MIS/chap0x0B/" title="实验十一 IoTGoat 网络服务安全与协议模糊测试｜MIS"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-10-24</div><div class="info-item-2">实验十一 IoTGoat 网络服务安全与协议模糊测试｜MIS</div></div><div class="info-2"><div class="info-item-1">【大三下25年3-6月】围绕 IoTGoat 的网络服务开展安全分析，检查 SSH、DNS、后门与 Telnet 等服务，并使用 boofuzz 对 FTP 和 HTTP 协议进行模糊测试。</div></div></div></a><a class="pagination-related" href="/2026/10/24/25%E5%B9%B43-6%E6%9C%88%E5%A4%A7%E4%B8%89%E4%B8%8B/MIS/chap0x0A/" title="实验十 IoTGoat 固件静态安全分析｜MIS"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-10-24</div><div class="info-item-2">实验十 IoTGoat 固件静态安全分析｜MIS</div></div><div class="info-2"><div class="info-item-1">【大三下25年3-6月】以 IoTGoat 为对象，分析弱口令与硬编码密码、不安全生态接口及缺乏安全更新机制等物联网固件安全问题。</div></div></div></a><a class="pagination-related" href="/2026/10/23/25%E5%B9%B43-6%E6%9C%88%E5%A4%A7%E4%B8%89%E4%B8%8B/MIS/chap0x08/" title="实验八 CVE-2022-30024 漏洞复现与栈溢出实践｜MIS"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-10-23</div><div class="info-item-2">实验八 CVE-2022-30024 漏洞复现与栈溢出实践｜MIS</div></div><div class="info-2"><div class="info-item-1">【大三下25年3-6月】在 Ubuntu 与 Kali 环境中复现 TP-Link 固件 CVE-2022-30024 缓冲区溢出漏洞，并扩展实践栈溢出利用，记录 Burp Suite、IDA 与 checksec 等工具的使用。</div></div></div></a><a class="pagination-related" href="/2026/10/23/25%E5%B9%B43-6%E6%9C%88%E5%A4%A7%E4%B8%89%E4%B8%8B/MIS/chap0x09/" title="实验九 CVE-2022-30024 固件静态分析与逆向分析｜MIS"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-10-23</div><div class="info-item-2">实验九 CVE-2022-30024 固件静态分析与逆向分析｜MIS</div></div><div class="info-2"><div class="info-item-1">【大三下25年3-6月】围绕 CVE-2022-30024 开展物联网固件静态分析，结合漏洞资料、字符串定位与 Ghidra 逆向分析，追踪 httpd 组件中的缺陷函数及其栈溢出逻辑。</div></div></div></a><a class="pagination-related" href="/2026/10/23/25%E5%B9%B43-6%E6%9C%88%E5%A4%A7%E4%B8%89%E4%B8%8B/MIS/chap0x07/" title="实验七 物联网固件安全基础｜MIS"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-10-23</div><div class="info-item-2">实验七 物联网固件安全基础｜MIS</div></div><div class="info-2"><div class="info-item-1">【大三下25年3-6月】以 D-Link 路由器固件为例，使用 binwalk 等工具开展固件提取与分析，并通过 FAT 完成系统态固件仿真，初步了解物联网固件安全研究流程。</div></div></div></a></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/img/cat-icon.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">MarsMrx</div><div class="author-info-description">的小窝U•ェ•*U
+</div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">24</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">15</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">5</div></a></div><div class="card-info-social-icons"><a class="social-icon" href="https://github.com/MarsMrx" target="_blank" title="Github"><i class="fab fa-github"></i></a><a class="social-icon" href="mailto:3536663251@qq.com" target="_blank" title="Email"><i class="fas fa-envelope"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">This is my Blog</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content is-expand"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%AE%9E%E9%AA%8C%E5%8D%81%E4%B8%80%EF%BC%9A%E5%9F%BA%E4%BA%8E-boofuzz-%E7%9A%84-CVE-2022-30024-%E6%BC%8F%E6%B4%9E%E5%8F%91%E7%8E%B0%E5%AE%9E%E8%B7%B5"><span class="toc-text">实验十一：基于 boofuzz 的 CVE-2022-30024 漏洞发现实践</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%9E%E9%AA%8C%E7%8E%AF%E5%A2%83"><span class="toc-text">实验环境</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%9E%E9%AA%8C%E4%BB%BB%E5%8A%A1"><span class="toc-text">实验任务</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%9E%E9%AA%8C%E5%86%85%E5%AE%B9"><span class="toc-text">实验内容</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%AE%9E%E9%AA%8C%E4%B8%80%EF%BC%9A%E4%BD%BF%E7%94%A8-boofuzz-%E5%B0%9D%E8%AF%95%E5%8F%91%E7%8E%B0-CVE-2022-30024-%E6%BC%8F%E6%B4%9E"><span class="toc-text">实验一：使用 boofuzz 尝试发现 CVE-2022-30024 漏洞</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%80%9D%E8%80%83-%E6%89%A9%E5%B1%95"><span class="toc-text">思考(扩展)</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%97%AE%E9%A2%98%E4%B8%8E%E8%A7%A3%E5%86%B3"><span class="toc-text">问题与解决</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8F%82%E8%80%83%E9%93%BE%E6%8E%A5"><span class="toc-text">参考链接</span></a></li></ol></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/10/24/25%E5%B9%B43-6%E6%9C%88%E5%A4%A7%E4%B8%89%E4%B8%8B/MIS/chap0x0C/" title="实验十二 基于 boofuzz 的 CVE-2022-30024 漏洞发现实践｜MIS">实验十二 基于 boofuzz 的 CVE-2022-30024 漏洞发现实践｜MIS</a><time datetime="2026-10-23T16:40:00.000Z" title="发表于 2026-10-24 00:40:00">2026-10-24</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/10/24/25%E5%B9%B43-6%E6%9C%88%E5%A4%A7%E4%B8%89%E4%B8%8B/MIS/chap0x0B/" title="实验十一 IoTGoat 网络服务安全与协议模糊测试｜MIS">实验十一 IoTGoat 网络服务安全与协议模糊测试｜MIS</a><time datetime="2026-10-23T16:35:00.000Z" title="发表于 2026-10-24 00:35:00">2026-10-24</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/10/24/25%E5%B9%B43-6%E6%9C%88%E5%A4%A7%E4%B8%89%E4%B8%8B/MIS/chap0x0A/" title="实验十 IoTGoat 固件静态安全分析｜MIS">实验十 IoTGoat 固件静态安全分析｜MIS</a><time datetime="2026-10-23T16:30:00.000Z" title="发表于 2026-10-24 00:30:00">2026-10-24</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/10/23/25%E5%B9%B43-6%E6%9C%88%E5%A4%A7%E4%B8%89%E4%B8%8B/MIS/chap0x09/" title="实验九 CVE-2022-30024 固件静态分析与逆向分析｜MIS">实验九 CVE-2022-30024 固件静态分析与逆向分析｜MIS</a><time datetime="2026-10-22T16:20:00.000Z" title="发表于 2026-10-23 00:20:00">2026-10-23</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/10/23/25%E5%B9%B43-6%E6%9C%88%E5%A4%A7%E4%B8%89%E4%B8%8B/MIS/chap0x08/" title="实验八 CVE-2022-30024 漏洞复现与栈溢出实践｜MIS">实验八 CVE-2022-30024 漏洞复现与栈溢出实践｜MIS</a><time datetime="2026-10-22T16:15:00.000Z" title="发表于 2026-10-23 00:15:00">2026-10-23</time></div></div></div></div></div></div></main><footer id="footer" style="background-image: url(/img/banner_img.png);"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2025 - 2026 By MarsMrx</span><span class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo 7.3.0</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly 5.5.3</a></span></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=5.5.3"></script><script src="/js/main.js?v=5.5.3"></script><div class="js-pjax"></div><script src="/js/archive-collapse.js"></script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>

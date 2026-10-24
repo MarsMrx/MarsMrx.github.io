@@ -1,3 +1,40 @@
+/* 归档页：按年份折叠文章 */
+#archive .archive-year-toggle {
+  cursor: pointer;
+  user-select: none;
+}
+
+#archive .archive-year-toggle::after {
+  content: '▾';
+  display: inline-block;
+  margin-left: 8px;
+  font-size: .8em;
+  transition: transform .2s ease;
+}
+
+#archive .archive-year-toggle[aria-expanded='false']::after {
+  transform: rotate(-90deg);
+}
+
+#archive .article-sort-item[hidden] {
+  display: none !important;
+}
+
+#archive .archive-month {
+  display: table;
+  margin: 18px 0 6px 0;
+  padding: 3px 10px;
+  border-left: 3px solid var(--anzhiyu-main, #49b1f5);
+  border-radius: 0 6px 6px 0;
+  background: color-mix(in srgb, var(--anzhiyu-main, #49b1f5) 10%, transparent);
+  color: var(--font-color);
+  font-size: .82em;
+  font-weight: 600;
+  letter-spacing: .04em;
+  opacity: .78;
+  white-space: nowrap;
+}
+
 /* 演示馆：仅影响索引页卡片 */
 #article-container .showcase-grid {
   display: grid;
