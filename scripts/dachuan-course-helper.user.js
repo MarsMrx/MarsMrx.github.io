@@ -5,6 +5,7 @@
 // @description  川大大川学堂助手：防切屏暂停、自动播放、自动按目录顺序下一课、视频倍速记忆，完美支持单页应用，可拖拽悬浮窗。
 // @match        https://ecourse.scu.edu.cn/*
 // @grant        none
+// @author       MarsMrx
 // @run-at       document-start
 // @license      MIT
 // ==/UserScript==
