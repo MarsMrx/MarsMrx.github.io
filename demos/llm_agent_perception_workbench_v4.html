@@ -1,0 +1,1206 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>LLM Agent Perception v4 · 轻暖学术版演进日历与文献检索工作台 (190篇)</title>
+<style>
+  :root {
+    --bg: #fbfaf8;
+    --surface: #ffffff;
+    --surface-2: #f6f4f0;
+    --surface-3: #efece6;
+    --border: #eae6df;
+    --text: #1f2328;
+    --text-muted: #57534e;
+    --text-light: #8a837c;
+    --primary: #c26d2d;
+    --primary-hover: #9a521d;
+    --primary-soft: rgba(194, 109, 45, 0.08);
+    --sw: #0284c7;
+    --sw-bg: #eef7fc;
+    --sw-border: #cde8f6;
+    --em: #16a34a;
+    --em-bg: #eef9f2;
+    --em-border: #c8edd6;
+    --cr: #7c3aed;
+    --cr-bg: #f5f0ff;
+    --cr-border: #e2d5fc;
+    --t-mech: #c26d2d;
+    --t-frame: #0284c7;
+    --t-bench: #16a34a;
+    --t-found: #e11d48;
+    --t-surv: #7c3aed;
+    --amber: #d97706;
+    --shadow: 0 1px 2px rgba(28, 25, 23, 0.04);
+    --shadow-lg: 0 8px 22px -6px rgba(28, 25, 23, 0.09);
+  }
+  [data-theme="dark"] {
+    --bg: #12100e;
+    --surface: #1c1917;
+    --surface-2: #26221f;
+    --surface-3: #332e2a;
+    --border: #3a342f;
+    --text: #f5f5f4;
+    --text-muted: #d6d3d1;
+    --text-light: #a8a29e;
+    --primary: #f59e0b;
+    --primary-hover: #fbbf24;
+    --primary-soft: rgba(245, 158, 11, 0.14);
+    --sw: #38bdf8;
+    --sw-bg: rgba(3, 105, 161, 0.24);
+    --sw-border: rgba(56, 189, 248, 0.42);
+    --em: #4ade80;
+    --em-bg: rgba(21, 128, 61, 0.24);
+    --em-border: rgba(74, 222, 128, 0.42);
+    --cr: #c084fc;
+    --cr-bg: rgba(126, 34, 206, 0.24);
+    --cr-border: rgba(192, 132, 252, 0.42);
+    --t-mech: #f59e0b;
+    --t-frame: #38bdf8;
+    --t-bench: #4ade80;
+    --t-found: #fb7185;
+    --t-surv: #c084fc;
+    --amber: #fbbf24;
+    --shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 20px 35px rgba(0, 0, 0, 0.65);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.55;
+    transition: background 0.2s, color 0.2s;
+  }
+  a { color: var(--primary); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  /* Navbar */
+  .navbar {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 40;
+    box-shadow: var(--shadow);
+  }
+  .nav-inner {
+    max-width: 1580px;
+    margin: 0 auto;
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    min-height: 62px;
+    gap: 12px;
+  }
+  .nav-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 0;
+  }
+  .nav-brand h1 {
+    font-size: 16.5px;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+  }
+  .nav-brand span {
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 6px;
+    background: var(--primary-soft);
+    color: var(--primary);
+    font-weight: 700;
+  }
+  .nav-tabs {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .tab-btn {
+    padding: 18px 14px;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 13.5px;
+    font-weight: 600;
+    cursor: pointer;
+    border-bottom: 2.5px solid transparent;
+    transition: all 0.15s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .tab-btn:hover { color: var(--text); }
+  .tab-btn.active {
+    color: var(--primary);
+    border-bottom-color: var(--primary);
+  }
+  .pill-badge {
+    padding: 1px 7px;
+    border-radius: 99px;
+    font-size: 11px;
+    background: var(--surface-2);
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+  }
+  .tab-btn.active .pill-badge {
+    background: var(--primary-soft);
+    color: var(--primary);
+    border-color: transparent;
+  }
+  .btn {
+    padding: 6px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface-2);
+    color: var(--text);
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    transition: all 0.15s;
+  }
+  .btn:hover { border-color: var(--primary); }
+  .btn-primary {
+    background: var(--primary);
+    color: #fff;
+    border-color: var(--primary);
+  }
+  [data-theme="dark"] .btn-primary { color: #12100e; }
+
+  .page-view {
+    display: none;
+    max-width: 1580px;
+    margin: 0 auto;
+    padding: 22px 24px 64px;
+  }
+  .page-view.active { display: block; }
+
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: var(--shadow);
+  }
+  .panel-title {
+    font-size: 16px;
+    font-weight: 800;
+    margin-bottom: 4px;
+  }
+  .panel-sub {
+    font-size: 12.5px;
+    color: var(--text-light);
+    margin-bottom: 16px;
+  }
+
+  /* Tab 1: Landscape */
+  .charts-row {
+    display: grid;
+    grid-template-columns: 1.25fr 1fr;
+    gap: 20px;
+    margin-bottom: 18px;
+  }
+  @media (max-width: 1080px) { .charts-row { grid-template-columns: 1fr; } }
+  .box-soft {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+  }
+  .donut-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    gap: 16px;
+    flex-wrap: wrap;
+    padding-top: 6px;
+  }
+  .donut-legend {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 1;
+    min-width: 190px;
+  }
+  .d-leg-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 10px;
+    border-radius: 7px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    font-size: 12.5px;
+    cursor: pointer;
+    transition: border-color 0.15s, transform 0.12s;
+  }
+  .d-leg-item:hover {
+    border-color: var(--primary);
+    transform: translateX(2px);
+  }
+  .wave-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+  }
+  @media (max-width: 1100px) { .wave-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 640px) { .wave-grid { grid-template-columns: 1fr; } }
+  .wave-item {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 13px;
+  }
+  .wave-item .tag-yr { font-size: 11px; font-weight: 700; color: var(--primary); }
+  .wave-item h4 { font-size: 13.5px; margin: 3px 0 5px; }
+  .wave-item p { font-size: 12px; color: var(--text-muted); line-height: 1.48; }
+
+  .mech-bars {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+  }
+  @media (max-width: 900px) { .mech-bars { grid-template-columns: repeat(2, 1fr); } }
+  .mech-stat-card {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    padding: 11px 13px;
+    cursor: pointer;
+    transition: border-color 0.15s, transform 0.12s;
+  }
+  .mech-stat-card:hover { border-color: var(--primary); transform: translateY(-2px); }
+  .mech-stat-card .m-name { font-size: 12.5px; font-weight: 700; }
+  .mech-stat-card .m-num { font-size: 19px; font-weight: 800; color: var(--primary); margin: 2px 0; }
+  .mech-stat-card .m-ex { font-size: 11px; color: var(--text-light); }
+
+  /* Tab 2: 2D Matrix Calendar */
+  .cal-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .legend-pills { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .env-pill {
+    padding: 5px 11px;
+    border-radius: 7px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    border: 1.5px solid transparent;
+    transition: opacity 0.15s;
+  }
+  .env-pill.inactive { opacity: 0.35; }
+  .env-sw { background: var(--sw-bg); color: var(--sw); border-color: var(--sw-border); }
+  .env-em { background: var(--em-bg); color: var(--em); border-color: var(--em-border); }
+  .env-cr { background: var(--cr-bg); color: var(--cr); border-color: var(--cr-border); }
+
+  .matrix-wrap {
+    overflow-x: auto;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--surface);
+  }
+  .matrix-table {
+    width: 100%;
+    min-width: 1160px;
+    border-collapse: collapse;
+    table-layout: fixed;
+  }
+  .matrix-table th {
+    background: var(--surface-2);
+    padding: 11px 10px;
+    font-size: 13px;
+    font-weight: 800;
+    text-align: center;
+    border-bottom: 1px solid var(--border);
+    border-right: 1px solid var(--border);
+  }
+  .matrix-table th:first-child { width: 70px; color: var(--text-light); font-size: 12px; }
+  .matrix-table td {
+    vertical-align: top;
+    padding: 7px;
+    border-bottom: 1px solid var(--border);
+    border-right: 1px solid var(--border);
+  }
+  .matrix-table td.month-axis {
+    background: var(--surface-2);
+    text-align: center;
+    vertical-align: middle;
+    font-weight: 700;
+    font-size: 12.5px;
+    color: var(--text-muted);
+  }
+  .matrix-table tr.empty-row td { padding: 3px 7px; opacity: 0.45; }
+  .cal-block {
+    display: block;
+    padding: 6px 8px;
+    border-radius: 6px;
+    margin-bottom: 5px;
+    font-size: 11.8px;
+    line-height: 1.32;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: transform 0.12s, box-shadow 0.12s;
+  }
+  .cal-block:last-child { margin-bottom: 0; }
+  .cal-block:hover { transform: translateY(-1px); box-shadow: 0 4px 10px rgba(0,0,0,0.12); }
+  .cal-block.sw { background: var(--sw-bg); color: var(--text); border-color: var(--sw-border); border-left: 3.5px solid var(--sw); }
+  .cal-block.em { background: var(--em-bg); color: var(--text); border-color: var(--em-border); border-left: 3.5px solid var(--em); }
+  .cal-block.cr { background: var(--cr-bg); color: var(--text); border-color: var(--cr-border); border-left: 3.5px solid var(--cr); }
+  .cal-block strong { font-weight: 700; display: block; }
+  .cal-block span { font-size: 10.5px; color: var(--text-muted); display: block; margin-top: 2px; }
+
+  /* Tab 3: Split Archive View (Left Table + Right Sticky Preview Card) */
+  .search-controls {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  @media (max-width: 1080px) { .search-controls { grid-template-columns: 1fr 1fr; } }
+  select, input[type="text"] {
+    width: 100%;
+    padding: 8px 11px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface-2);
+    color: var(--text);
+    font-size: 12.5px;
+    outline: none;
+  }
+  select:focus, input[type="text"]:focus { border-color: var(--primary); }
+
+  .archive-split {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 380px;
+    gap: 18px;
+    align-items: start;
+  }
+  @media (max-width: 1080px) { .archive-split { grid-template-columns: 1fr; } }
+
+  .table-scroll {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    max-height: calc(100vh - 255px);
+    min-height: 460px;
+    overflow-y: auto;
+    overflow-x: auto;
+    background: var(--surface);
+    box-shadow: var(--shadow);
+  }
+  .table-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
+  .table-scroll::-webkit-scrollbar-track { background: transparent; }
+  .table-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+  .table-scroll::-webkit-scrollbar-thumb:hover { background: var(--text-light); }
+
+  .archive-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12.5px;
+  }
+  .archive-table th, .archive-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    text-align: left;
+    vertical-align: top;
+  }
+  .archive-table th {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    background: var(--surface-2);
+    font-weight: 700;
+    color: var(--text-muted);
+    white-space: nowrap;
+    box-shadow: 0 1px 0 var(--border);
+  }
+  .archive-table tr { cursor: pointer; transition: background 0.1s; }
+  .archive-table tr:hover td { background: var(--surface-2); }
+  .archive-table tr.selected-row td {
+    background: var(--primary-soft);
+    border-bottom-color: rgba(194, 109, 45, 0.25);
+  }
+
+  .sticky-preview {
+    position: sticky;
+    top: 78px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px 20px;
+    box-shadow: var(--shadow-lg);
+    height: auto;
+  }
+  .venue-strip {
+    margin-top: 10px;
+    padding: 8px 11px;
+    background: var(--surface-2);
+    border-radius: 7px;
+    border: 1px solid var(--border);
+  }
+  .venue-strip .v-lbl {
+    font-size: 10.5px;
+    color: var(--text-light);
+    margin-bottom: 2px;
+  }
+  .venue-strip .v-val {
+    font-size: 12px;
+    font-weight: 700;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    color: var(--text);
+  }
+  .preview-flow-item {
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px dashed var(--border);
+  }
+  .preview-flow-item h4 {
+    font-size: 11.5px;
+    font-weight: 700;
+    color: var(--text-light);
+    margin-bottom: 4px;
+  }
+  .preview-flow-item p {
+    font-size: 12.6px;
+    line-height: 1.55;
+    color: var(--text);
+  }
+  .preview-highlight-box {
+    margin-top: 12px;
+    padding: 9px 11px;
+    background: var(--sw-bg);
+    border: 1px solid var(--sw-border);
+    border-radius: 8px;
+  }
+  .preview-highlight-box h4 {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--sw);
+    margin-bottom: 3px;
+  }
+  .preview-highlight-box p {
+    font-size: 12.2px;
+    line-height: 1.48;
+    color: var(--text);
+  }
+  .preview-box {
+    margin-top: 12px;
+    padding: 11px 13px;
+    background: var(--surface-2);
+    border-radius: 8px;
+    border: 1px solid var(--border);
+  }
+  .preview-box h4 {
+    font-size: 11px;
+    color: var(--primary);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 4px;
+  }
+  .preview-box p { font-size: 12.8px; line-height: 1.55; color: var(--text); }
+
+  .tag {
+    display: inline-block;
+    padding: 2px 7px;
+    border-radius: 5px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .tag-sw { background: var(--sw-bg); color: var(--sw); }
+  .tag-em { background: var(--em-bg); color: var(--em); }
+  .tag-cr { background: var(--cr-bg); color: var(--cr); }
+  .tag-neutral { background: var(--surface-2); color: var(--text-muted); border: 1px solid var(--border); }
+
+  /* Drawer for Tab 2 Calendar Click */
+  .drawer-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(28, 25, 23, 0.45);
+    z-index: 50;
+    display: none;
+  }
+  .drawer-backdrop.open { display: block; }
+  .drawer {
+    position: fixed;
+    top: 0;
+    right: -520px;
+    width: 100%;
+    max-width: 500px;
+    height: 100vh;
+    background: var(--surface);
+    border-left: 1px solid var(--border);
+    box-shadow: var(--shadow-lg);
+    z-index: 60;
+    padding: 24px;
+    overflow-y: auto;
+    transition: right 0.22s ease;
+  }
+  .drawer.open { right: 0; }
+  .drawer-close {
+    float: right;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    width: 30px; height: 30px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 16px;
+  }
+</style>
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="nav-inner">
+    <div class="nav-brand">
+      <h1>🧭 LLM Agent Perception 工作台</h1>
+      <span>v4 轻暖学术版 · 190 篇全量库</span>
+    </div>
+    <div class="nav-tabs">
+      <button class="tab-btn active" onclick="switchTab('tab-landscape', this)">📈 演进态势与波峰图谱</button>
+      <button class="tab-btn" onclick="switchTab('tab-calendar', this)">🗓️ 二维时空坐标日历 <span class="pill-badge" id="badge-milestone">48</span></button>
+      <button class="tab-btn" onclick="switchTab('tab-archive', this)">📚 全量文献独立检索库 <span class="pill-badge" id="badge-total">190</span></button>
+      <button class="tab-btn" onclick="switchTab('tab-bookmarks', this)">⭐ PPT 候选池 <span class="pill-badge" id="badge-saved">0</span></button>
+    </div>
+    <div>
+      <button class="btn" onclick="toggleTheme()">🌓 暖白 / 暗夜切换</button>
+    </div>
+  </div>
+</nav>
+
+<!-- TAB 1: EVOLUTION LANDSCAPE & DONUT CHART -->
+<main class="page-view active" id="tab-landscape">
+  <div class="panel">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:14px;">
+      <div>
+        <div class="panel-title">📈 演进态势图谱与研究类型分布（动态实时统计）</div>
+        <div class="panel-sub" style="margin-bottom:0;">左侧展示年度与环境轨道分布，右侧圆环图展示<strong>五大事件类型</strong>构成（点击任意圆环图例可直接跳转全量库过滤查看）。</div>
+      </div>
+      <div style="display:flex;gap:6px;background:var(--surface-2);padding:3px;border-radius:8px;border:1px solid var(--border);">
+        <button class="btn" id="bar-mode-ms" style="background:var(--surface);color:var(--primary);" onclick="setBarMode('milestone')">核心里程碑 (48篇)</button>
+        <button class="btn" id="bar-mode-all" style="background:transparent;border-color:transparent;" onclick="setBarMode('all')">全量文献库 (190篇)</button>
+      </div>
+    </div>
+
+    <div class="charts-row">
+      <!-- Left: Stacked Bar Chart -->
+      <div class="box-soft">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:10px;font-size:12px;">
+          <div style="display:flex;gap:14px;flex-wrap:wrap;">
+            <span><b style="color:var(--sw)">■</b> 软件/数字环境 (<span id="stat-bar-sw">0</span>)</span>
+            <span><b style="color:var(--em)">■</b> 具身/物理空间 (<span id="stat-bar-em">0</span>)</span>
+            <span><b style="color:var(--cr)">■</b> 跨域/底座/综述 (<span id="stat-bar-cr">0</span>)</span>
+          </div>
+          <span style="color:var(--text-light);font-size:11px;" id="bar-mode-label">当前统计：核心里程碑</span>
+        </div>
+        <div id="landscape-bar-chart"></div>
+      </div>
+
+      <!-- Right: Research Type Donut Chart -->
+      <div class="box-soft">
+        <div style="font-size:12.5px;font-weight:700;margin-bottom:6px;color:var(--text);">🍩 全量 190 篇研究类型构成（点击筛选检索库）</div>
+        <div class="donut-wrap">
+          <div id="donut-svg-box"></div>
+          <div class="donut-legend" id="donut-legend-box"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4 Focal Waves -->
+    <div class="wave-grid">
+      <div class="wave-item">
+        <div class="tag-yr">焦点波峰 1 · 2021.12 – 2023.06</div>
+        <h4>文本代理与具身传感双线起跑</h4>
+        <p>软件侧依靠浏览器与 DOM 候选过滤（WebGPT、ReAct、MindAct）；具身侧同步开启连续传感嵌入与物理主动探测（SayCan、PaLM-E、Matcha）。</p>
+      </div>
+      <div class="wave-item">
+        <div class="tag-yr">焦点波峰 2 · 2023.09 – 2024.12</div>
+        <h4>纯视觉界面与空间 Grounding 爆发</h4>
+        <p>GPT-4V 与 OSWorld 暴露“看得懂但点不准”鸿沟，催生高分屏双路（CogAgent）与百万级像素坐标预训练（SeeClick、UGround、OmniParser）。</p>
+      </div>
+      <div class="wave-item">
+        <div class="tag-yr">焦点波峰 3 · 2025.01 – 2025.09</div>
+        <h4>原生多步闭环、RL 缩放与音视频流</h4>
+        <p>从外挂检测器转向原生端到端反思闭环（UI-TARS），ScreenSpot-Pro 催生测试时局部放大（RegionFocus），同时流媒体主动感知（Dispider）起势。</p>
+      </div>
+      <div class="wave-item">
+        <div class="tag-yr">焦点波峰 4 · 2025.10 – 2026.11</div>
+        <h4>主动探查、时空盲区与环境漂移</h4>
+        <p>聚焦 POMDP 状态估计（VAGEN）、动作间瞬时漏采（AOI）、工具过期盲区（TicToc）、主动裁剪/追问（GUI-Eyes、PRISM）及漂移审计（EnvOS）。</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-title">🧩 感知机制八维细分分布（全量 190 篇库统计）</div>
+    <div class="panel-sub">点击任意机制卡片，可直接跳转至全量检索库查看该切面下的全部独立论文。</div>
+    <div class="mech-bars" id="mech-summary-grid"></div>
+  </div>
+</main>
+
+<!-- TAB 2: 2D MATRIX CALENDAR -->
+<main class="page-view" id="tab-calendar">
+  <div class="panel" style="padding:16px 20px;">
+    <div class="cal-toolbar">
+      <div>
+        <div class="panel-title" style="margin-bottom:2px;">🗓️ 二维时空坐标日历（横轴：年份 2021–2026 ｜ 纵轴：月份 01–12）</div>
+        <div style="font-size:12px;color:var(--text-light);">展示 <strong>48 篇精简核心里程碑</strong>（如需查阅全部 190 篇独立条目请切换至顶部“全量文献独立检索库”）；点击色块查看详情。</div>
+      </div>
+      <div class="legend-pills">
+        <span style="font-size:12px;color:var(--text-light);">点击筛选轨道：</span>
+        <button class="env-pill env-sw" id="cal-toggle-sw" onclick="toggleCalTrack('software')">💻 软件/数字环境</button>
+        <button class="env-pill env-em" id="cal-toggle-em" onclick="toggleCalTrack('embodied')">🦾 具身/物理空间</button>
+        <button class="env-pill env-cr" id="cal-toggle-cr" onclick="toggleCalTrack('cross')">🌐 跨域/底座/综述</button>
+      </div>
+    </div>
+    <div class="matrix-wrap">
+      <table class="matrix-table" id="matrix-calendar-table"></table>
+    </div>
+  </div>
+</main>
+
+<!-- TAB 3: FULL ARCHIVE WITH RIGHT STICKY PREVIEW CARD -->
+<main class="page-view" id="tab-archive">
+  <div class="panel" style="margin-bottom:14px;">
+    <div class="panel-title">📚 全量文献独立检索库（共 190 篇 · 完全独立拆分，不合并同类项）</div>
+    <div class="panel-sub">完整收录三方调研并集、全部 9 篇下载综述及核心基础模型（GPT-4 / GPT-4V / GPT-4o / Qwen-VL / Gemini / Magma 等）；<strong>点击左侧任意文献行，右侧卡片即展开对应机制剖析</strong>（列表支持独立上下滚动）。</div>
+
+    <div class="search-controls">
+      <input type="text" id="arch-q" placeholder="🔍 搜索论文简称、全称、机构或核心机制关键词..." oninput="renderArchive()" />
+      <select id="arch-year" onchange="renderArchive()">
+        <option value="all">全部年份 (2021–2026)</option>
+        <option value="2021">2021 年</option>
+        <option value="2022">2022 年</option>
+        <option value="2023">2023 年</option>
+        <option value="2024">2024 年</option>
+        <option value="2025">2025 年</option>
+        <option value="2026">2026 年 (截至11月)</option>
+      </select>
+      <select id="arch-track" onchange="renderArchive()">
+        <option value="all">全部环境轨道 (3类)</option>
+        <option value="software">💻 软件/数字环境</option>
+        <option value="embodied">🦾 具身/物理空间</option>
+        <option value="cross">🌐 跨域/底座/综述</option>
+      </select>
+      <select id="arch-type" onchange="renderArchive()">
+        <option value="all">全部事件类型 (5类)</option>
+        <option value="mechanism">感知机制/方法</option>
+        <option value="framework">智能体闭环框架</option>
+        <option value="benchmark">环境与评测基准</option>
+        <option value="foundation">多模态/推理基础模型</option>
+        <option value="survey">领域综述 (含9篇下载)</option>
+      </select>
+      <select id="arch-mech" onchange="renderArchive()">
+        <option value="all">全部感知机制 (8类)</option>
+        <option value="text_interface">1. 输入过滤与结构化接口</option>
+        <option value="representation">2. 高分屏编码与视觉表征</option>
+        <option value="spatial_grounding">3. 空间定位与可供性接地</option>
+        <option value="active_zoom">4. 主动视觉缩放与工具探查</option>
+        <option value="multi_step_loop">5. 多步交互闭环与帧间对比</option>
+        <option value="av_stream">6. 音视频流与实时多模态</option>
+        <option value="temporal_state">7. 时序校准、状态估计与安全</option>
+        <option value="embodied_3d">8. 具身多模态传感与3D空间</option>
+      </select>
+    </div>
+
+    <div style="font-size:12.5px;color:var(--text-muted);">
+      当前检索匹配：<strong id="arch-match-count" style="color:var(--primary);">0</strong> 篇（标 <span style="color:var(--amber);">★</span> 为核心里程碑节点）
+    </div>
+  </div>
+
+  <!-- Split View: Left Table + Right Persistent Preview Card -->
+  <div class="archive-split">
+    <div class="table-scroll">
+      <table class="archive-table">
+        <thead>
+          <tr>
+            <th>首次公开</th>
+            <th>论文简称与全称</th>
+            <th>轨道 / 类型</th>
+            <th>感知机制</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody id="arch-tbody"></tbody>
+      </table>
+    </div>
+
+    <aside class="sticky-preview" id="sticky-preview-card">
+      <!-- Populated dynamically -->
+    </aside>
+  </div>
+</main>
+
+<!-- TAB 4: PPT BOOKMARKS -->
+<main class="page-view" id="tab-bookmarks">
+  <div class="panel">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px;">
+      <div>
+        <div class="panel-title">⭐ 我的 PPT 候选论文池</div>
+        <div class="panel-sub" style="margin-bottom:0;">在日历色块或检索库中点击“收藏”，即可集中沉淀至此并一键导出为 Markdown 大纲素材。</div>
+      </div>
+      <button class="btn btn-primary" onclick="copyBookmarksMd()">📋 复制 Markdown 清单</button>
+    </div>
+    <div id="bookmarks-container"></div>
+  </div>
+</main>
+
+<!-- Slide-over Drawer (for Tab 2 Calendar Click) -->
+<div class="drawer-backdrop" id="drawer-backdrop" onclick="closeDrawer()"></div>
+<aside class="drawer" id="detail-drawer">
+  <button class="drawer-close" onclick="closeDrawer()">✕</button>
+  <div id="drawer-body"></div>
+</aside>
+
+<script>
+const PAPERS = [{"id": "screen2words-2021", "date": "2021.08", "year": 2021, "short": "Screen2Words", "title": "Screen2Words: Automatic Mobile UI Summarization with Multimodal Learning", "org": "Google Research", "venue": "UIST 2021 (arXiv:2108.03353)", "url": "https://arxiv.org/abs/2108.03353", "track": "software", "type": "mechanism", "mech": "representation", "milestone": false, "summary": "利用多模态学习自动生成移动应用屏幕语义摘要，是早期移动界面视觉表征理解的代表工作。", "problem": "早期移动 UI 模型缺乏对整屏功能语义的高层概括能力。", "mechanism": "融合界面截图视觉特征与视图层级文本进行多模态屏幕摘要生成。", "evidence": "在 RICO 移动界面数据集上建立屏幕级语义理解基准。"}, {"id": "scanqa-2021", "date": "2021.12", "year": 2021, "short": "ScanQA", "title": "ScanQA: 3D Question Answering for Spatial Scene Understanding", "org": "University of Tokyo", "venue": "CVPR 2022 (arXiv:2112.10482)", "url": "https://arxiv.org/abs/2112.10482", "track": "embodied", "type": "benchmark", "mech": "embodied_3d", "milestone": false, "summary": "将三维室内点云场景理解形式化为自然语言问答任务，要求模型定位三维物体并推理空间方位。", "problem": "早期三维视觉感知局限于固定类别检测，缺乏与自然语言语义推理的结合。", "mechanism": "融合 3D 点云物体特征与语言编码器联合预测答案与三维目标边界框。", "evidence": "建立 4.1 万条三维室内场景问答基准，支撑后续 3D 具身语言定位。"}, {"id": "mia-2021", "date": "2021.12", "year": 2021, "short": "Multimodal Interactive Agents", "title": "Imitating Interactive Intelligence", "org": "DeepMind", "venue": "arXiv:2112.03763", "url": "https://arxiv.org/abs/2112.03763", "track": "embodied", "type": "framework", "mech": "embodied_3d", "milestone": false, "summary": "利用模仿学习与自监督学习构建能够在虚拟三维环境中接收多模态观察并交互的早期智能体。", "problem": "虚拟三维具身环境中缺乏将连续视觉输入直接转化为交互行动的通用智能体。", "mechanism": "端到端视觉-语言编码结合大规模人类交互轨迹模仿学习。", "evidence": "在 3D 虚拟游戏环境（Playhouse）中展现出对复杂空间指令的响应能力。"}, {"id": "webgpt-2021", "date": "2021.12", "year": 2021, "short": "WebGPT", "title": "WebGPT: Browser-assisted Question-answering with Human Feedback", "org": "OpenAI", "venue": "arXiv:2112.09332", "url": "https://arxiv.org/abs/2112.09332", "track": "software", "type": "framework", "mech": "text_interface", "milestone": true, "summary": "让语言模型操作文本化浏览器执行检索、翻页与引用收集，将静态模型上下文扩展为通过行动主动获取外部文本观察。", "problem": "纯参数化语言模型缺乏实时外部知识，且无法主动检索验证事实。", "mechanism": "提供文本浏览器动作接口（Search/Click/Find），将网页文本状态逐步返回上下文。", "evidence": "在 ELI5 长问答上人类偏好率超越人类基线，确立文本代理交互雏形。"}, {"id": "zeroshot-planners-2022", "date": "2022.01", "year": 2022, "short": "Zero-Shot Planners", "title": "Language Models as Zero-Shot Planners: Extracting Actionable Knowledge for Embodied Agents", "org": "UC Berkeley / Google", "venue": "ICML 2022 (arXiv:2201.07207)", "url": "https://arxiv.org/abs/2201.07207", "track": "embodied", "type": "framework", "mech": "embodied_3d", "milestone": false, "summary": "探讨从预训练语言模型中提取可执行动作计划，并将语义步骤与具身环境目标对象对齐。", "problem": "大模型生成的自由文本步骤往往无法匹配仿真器中的合法动作与物体名称。", "mechanism": "通过语义相似度嵌入将 LLM 生成的自由文本步骤映射到环境可执行动作原语。", "evidence": "在 VirtualHome 家庭仿真环境中实现零样本长程任务分解。"}, {"id": "saycan-2022", "date": "2022.04", "year": 2022, "short": "SayCan", "title": "Do As I Can, Not As I Say: Grounding Language in Robotic Affordances", "org": "Google Research", "venue": "CoRL 2022 (arXiv:2204.01691)", "url": "https://arxiv.org/abs/2204.01691", "track": "embodied", "type": "framework", "mech": "embodied_3d", "milestone": true, "summary": "将 LLM 的高层任务知识与机器人底层技能价值函数（Affordance）结合，使语言规划受到当前物理环境可执行性的真实约束。", "problem": "大模型生成的自然语言计划往往脱离物理现场状态。", "mechanism": "视觉观察输入技能价值函数评估当前可执行概率，与 LLM 语义概率联合决策。", "evidence": "在真实厨房场景 101 项长程指令中规划准确率达 84%、执行成功率达 74%。"}, {"id": "flamingo-2022", "date": "2022.04", "year": 2022, "short": "Flamingo", "title": "Flamingo: a Visual Language Model for Few-Shot Learning", "org": "DeepMind", "venue": "NeurIPS 2022 (arXiv:2204.14198)", "url": "https://arxiv.org/abs/2204.14198", "track": "cross", "type": "foundation", "mech": "representation", "milestone": false, "summary": "通过 Perceiver Resampler 与门控交叉注意力将任意交错图文序列压缩注入冻结语言模型，奠定多模态上下文感知底座。", "problem": "大语言模型缺乏原生处理多图交错视频/图像流输入的能力。", "mechanism": "视觉编码器 + Perceiver 重采样器将变长视觉特征映射为固定数量视觉 token。", "evidence": "在 16 项多模态理解基准上刷新少样本学习纪录。"}, {"id": "mrkl-2022", "date": "2022.05", "year": 2022, "short": "MRKL Systems", "title": "MRKL Systems: A Modular, Neuro-Symbolic Architecture that Combines Large Language Models, External Knowledge Sources and Discrete Reasoning", "org": "AI21 Labs", "venue": "arXiv:2205.00445", "url": "https://arxiv.org/abs/2205.00445", "track": "software", "type": "framework", "mech": "text_interface", "milestone": false, "summary": "提出模块化神经符号架构，将大语言模型作为路由器与外部数据库、计算器等环境接口连接。", "problem": "单一神经网络在实时动态数据查询与精确符号计算上存在固有短板。", "mechanism": "LLM 路由解析意图并调用外部神经/符号模块，将返回结果融入生成。", "evidence": "早期系统化论证大模型通过外部接口感知实时世界信息的工程范式。"}, {"id": "dialfred-2022", "date": "2022.06", "year": 2022, "short": "DialFRED", "title": "DialFRED: Dialogue-Enabled Agents for Embodied Instruction Following", "org": "USC / Amazon", "venue": "IEEE RA-L 2022 (arXiv:2206.05871)", "url": "https://arxiv.org/abs/2206.05871", "track": "embodied", "type": "benchmark", "mech": "active_zoom", "milestone": false, "summary": "构建支持具身智能体在环境观察存在歧义或目标不可见时主动通过对话提问获取信息的指令跟随基准。", "problem": "当环境视觉观察存在遮挡或指代歧义时，被动执行智能体无法自行补全信息。", "mechanism": "允许智能体在导航操作过程中主动触发针对目标位置或属性的问询动作。", "evidence": "早期在具身基准中确立“主动信息寻求（Information Seeking）”机制。"}, {"id": "webshop-2022", "date": "2022.07", "year": 2022, "short": "WebShop", "title": "WebShop: Towards Scalable Real-World Web Interaction with Grounded Language Agents", "org": "Princeton", "venue": "NeurIPS 2022 (arXiv:2207.01206)", "url": "https://arxiv.org/abs/2207.01206", "track": "software", "type": "benchmark", "mech": "text_interface", "milestone": false, "summary": "构建包含百万级真实商品的交互式电商网页沙盒，将动态网页页面结构作为持续变化的环境 observation 评测语言智能体。", "problem": "早期网页交互缺乏可扩展、可自动校验结果的多步动态环境。", "mechanism": "提供精简 HTML/文本观察与点击/搜索动作空间，支持属性匹配自动评分。", "evidence": "成为后续 ReAct 等众多文本与多模态网页智能体的核心评测床。"}, {"id": "inner-monologue-2022", "date": "2022.07", "year": 2022, "short": "Inner Monologue", "title": "Inner Monologue: Embodied Reasoning through Planning with Language Models", "org": "Google / UC Berkeley", "venue": "CoRL 2022 (arXiv:2207.05608)", "url": "https://arxiv.org/abs/2207.05608", "track": "embodied", "type": "framework", "mech": "embodied_3d", "milestone": true, "summary": "将场景物体识别、动作成功检测与人类语言反馈持续转化为“内心独白”文本注入提示，构建具身感知—重规划闭环。", "problem": "SayCan 等开环规划在遇到抓取滑落或环境干扰时无法根据新状态纠错。", "mechanism": "多源感知检测器把物理反馈转译为自然语言更新上下文，触发重规划。", "evidence": "在人为干扰桌面操作任务中显著提升长程闭环恢复成功率。"}, {"id": "code-as-policies-2022", "date": "2022.09", "year": 2022, "short": "Code as Policies", "title": "Code as Policies: Language Model Programs for Embodied Control", "org": "Google Research", "venue": "ICRA 2023 (arXiv:2209.07753)", "url": "https://arxiv.org/abs/2209.07753", "track": "embodied", "type": "framework", "mech": "embodied_3d", "milestone": false, "summary": "让语言模型生成直接调用底层感知 API（目标检测、空间坐标查询）与运动控制的策略代码，显式表达环境状态依赖。", "problem": "纯自然语言动作序列难以处理循环、条件判断与精确几何空间关系。", "mechanism": "以 Python 代码作为中间策略表示，按需调用感知 API 获取实时坐标。", "evidence": "在多类桌面操作与空间推理任务中实现零样本泛化控制。"}, {"id": "spotlight-2022", "date": "2022.10", "year": 2022, "short": "Spotlight", "title": "Spotlight: Mobile UI Understanding using Vision-Language Models with a Focus", "org": "Google Research", "venue": "ICLR 2023 (arXiv:2210.02663)", "url": "https://arxiv.org/abs/2210.02663", "track": "software", "type": "mechanism", "mech": "representation", "milestone": false, "summary": "面向移动界面构建带区域焦点注意力的视觉语言模型，统一完成屏幕摘要、控件标题与点击感知任务。", "problem": "通用图像编码器难以聚焦界面上特定控件区域的局部视觉与结构上下文。", "mechanism": "通过区域焦点编码器提取指定 UI 控件及其周边布局特征注入多模态模型。", "evidence": "在多项移动界面理解与元素预测基准上刷新 SOTA。"}, {"id": "pix2struct-2022", "date": "2022.10", "year": 2022, "short": "Pix2Struct", "title": "Pix2Struct: Screenshot Parsing as Pretraining for Visual Language Understanding", "org": "Google Research", "venue": "ICML 2023 (arXiv:2210.03347)", "url": "https://arxiv.org/abs/2210.03347", "track": "software", "type": "mechanism", "mech": "representation", "milestone": true, "summary": "提出将网页截图还原为简化 HTML 解析树的预训练目标，并支持可变分辨率输入，奠定直接从渲染截图读懂界面的基础。", "problem": "通用自然图像预训练模型难以识读界面中密集排版的小字与结构关系。", "mechanism": "利用海量网页渲染图与 DOM 结构对开展遮罩截图解析预训练。", "evidence": "在 Screen2Words、Widget Captioning 等 UI 理解任务上取得显著提升。"}, {"id": "react-2022", "date": "2022.10", "year": 2022, "short": "ReAct", "title": "ReAct: Synergizing Reasoning and Acting in Language Models", "org": "Princeton / Google", "venue": "ICLR 2023 (arXiv:2210.03629)", "url": "https://arxiv.org/abs/2210.03629", "track": "software", "type": "framework", "mech": "text_interface", "milestone": true, "summary": "确立 Thought → Action → Observation 交错推理范式，使模型能主动查询外部环境并用返回的观察纠正推理幻觉。", "problem": "纯思维链（CoT）封闭在模型内部参数中，无法获取动态外部状态导致事实幻觉。", "mechanism": "交替生成推理轨迹与环境动作，将外部接口返回值作为 Observation 追加进上下文。", "evidence": "在 ALFWorld 和 WebShop 上绝对成功率分别超越模仿/强化学习 34% 与 10%。"}, {"id": "html-llms-2022", "date": "2022.10", "year": 2022, "short": "Understanding HTML with LLMs", "title": "Understanding HTML with Large Language Models", "org": "Google Research", "venue": "EMNLP 2022 (arXiv:2210.03945)", "url": "https://arxiv.org/abs/2210.03945", "track": "software", "type": "mechanism", "mech": "text_interface", "milestone": false, "summary": "系统研究大语言模型解析、理解与操作网页原始 HTML 结构化文本的能力边界。", "problem": "网页 DOM 树包含大量渲染样式噪声，通用语言模型对结构化标记语言理解能力未知。", "mechanism": "评估不同 HTML 序列化与精简策略对元素分类与语义预测的影响。", "evidence": "为后续结构化网页观察压缩提供了早期实证基础。"}, {"id": "interactive-lang-2022", "date": "2022.10", "year": 2022, "short": "Interactive Language", "title": "Interactive Language: Talking to Robots in Real Time", "org": "Google Research", "venue": "arXiv:2210.06407", "url": "https://arxiv.org/abs/2210.06407", "track": "embodied", "type": "framework", "mech": "embodied_3d", "milestone": false, "summary": "构建将实时高频摄像头视觉状态与连续自然语言交互指令接入机器人控制的实时闭环系统。", "problem": "高频机器人控制与慢速语言推理之间存在实时状态同步鸿沟。", "mechanism": "端到端视觉-语言-动作策略网络高频处理实时相机帧与流式用户纠偏指令。", "evidence": "在数十万条真机遥操作轨迹上实现实时语言引导桌面操作。"}, {"id": "vlm-inst-agents-2022", "date": "2022.10", "year": 2022, "short": "VLM Instruction Agents", "title": "Instruction-Following Agents with Jointly Pre-Trained Vision-Language Models", "org": "Microsoft Research", "venue": "arXiv:2210.13431", "url": "https://arxiv.org/abs/2210.13431", "track": "embodied", "type": "framework", "mech": "embodied_3d", "milestone": false, "summary": "探索基于联合预训练的视觉语言模型直接接收第一视角图像观察以遵循自然语言指令行动。", "problem": "具身环境中视觉观察与指令遵循策略往往分离训练导致泛化不足。", "mechanism": "将视觉编码器与语言指令解码器联合预训练并接入连续动作输出头。", "evidence": "在多类仿真视觉导航与操作基准上验证多模态预训练迁移收益。"}, {"id": "sqa3d-2022", "date": "2022.10", "year": 2022, "short": "SQA3D", "title": "SQA3D: Situated Question Answering in 3D Scenes", "org": "BIGAI / UCLA", "venue": "ICLR 2023 (arXiv:2210.07474)", "url": "https://arxiv.org/abs/2210.07474", "track": "embodied", "type": "benchmark", "mech": "embodied_3d", "milestone": false, "summary": "要求具身智能体首先理解自身在三维场景中的当前位置与朝向（Situational Awareness），再推理周边空间关系。", "problem": "传统 3D 问答忽略了智能体自身的具身视角与空间位姿约束。", "mechanism": "构建 3.3 万条带视角位姿描述的三维具身问答基准。", "evidence": "暴露现有模型在具身空间位姿感知上与人类（47.2% vs 90.1%）的显著差距。"}, {"id": "visprog-2022", "date": "2022.11", "year": 2022, "short": "VisProg", "title": "Visual Programming: Compositional Visual Reasoning without Training", "org": "Allen Institute for AI (AI2)", "venue": "CVPR 2023 (arXiv:2211.11559)", "url": "https://arxiv.org/abs/2211.11559", "track": "software", "type": "framework", "mech": "active_zoom", "milestone": false, "summary": "让大模型把复杂视觉指令编译为模块化 Python 程序，逐行调用检测、分割等现成视觉专家模型并聚合中间观察结果。", "problem": "早期纯文本大模型无法直接处理视觉输入，端到端微调成本高且缺乏可解释性。", "mechanism": "上下文学习生成视觉工具调用程序，实现委派式组合视觉感知。", "evidence": "在组合视觉问答与图像编辑任务上实现零样本高精度推理。"}, {"id": "vipergpt-2022", "date": "2022.11", "year": 2022, "short": "ViperGPT", "title": "ViperGPT: Visual Inference via Python Execution for Reasoning", "org": "Columbia University", "venue": "ICCV 2023 (arXiv:2303.08128)", "url": "https://arxiv.org/abs/2303.08128", "track": "software", "type": "framework", "mech": "active_zoom", "milestone": false, "summary": "让代码模型针对每个视觉查询动态生成可执行 Python 程序，组合调用视觉-语言子程序与裁剪检视操作得出答案。", "problem": "单次前向推理难以处理包含复杂空间逻辑与局部细节验证的视觉推理任务。", "mechanism": "代码生成引擎调用 crop/find/verify 等视觉 API 逐步获取图像区域证据。", "evidence": "在 GQA、VQA 与空间推理基准上实现免训练的高精度可解释推理。"}, {"id": "llm-planner-2022", "date": "2022.12", "year": 2022, "short": "LLM-Planner", "title": "LLM-Planner: Few-Shot Grounded Planning for Embodied Agents with Large Language Models", "org": "Ohio State University", "venue": "ICCV 2023 (arXiv:2212.04088)", "url": "https://arxiv.org/abs/2212.04088", "track": "embodied", "type": "framework", "mech": "embodied_3d", "milestone": false, "summary": "结合实时环境物体检测观察与动态重规划实现面向具身智能体的少样本接地规划。", "problem": "室内导航与操作中环境物体分布未知，静态规划极易因未见物体而卡死。", "mechanism": "将视觉检测器发现的新物体列表动态注入规划提示触发重规划。", "evidence": "在 ALFRED 基准上仅用极少样本即达到极具竞争力的长程任务成功率。"}, {"id": "dont-gen-discriminate-2022", "date": "2022.12", "year": 2022, "short": "Don't Generate, Discriminate", "title": "Don't Generate, Discriminate: A Proposal for Grounding Language Models to Real-World Environments", "org": "Ohio State University", "venue": "ACL 2023 (arXiv:2212.09736)", "url": "https://arxiv.org/abs/2212.09736", "track": "software", "type": "mechanism", "mech": "text_interface", "milestone": false, "summary": "指出生成式模型直接输出环境结构易产生无效幻觉，提出基于环境合法候选集合进行判别式排序选择的接地范式。", "problem": "自回归生成式预测在面对复杂结构化环境时常生成不存在的符号。", "mechanism": "先枚举或粗筛环境有效候选，再由语言模型做判别式匹配选择。", "evidence": "直接启发了后续 Mind2Web / MindAct 的两阶段候选排序与多选预测设计。"}, {"id": "blip2-2023", "date": "2023.01", "year": 2023, "short": "BLIP-2", "title": "BLIP-2: Bootstrapping Language-Image Pre-training with Frozen Image Encoders and Large Language Models", "org": "Salesforce Research", "venue": "ICML 2023 (arXiv:2301.12597)", "url": "https://arxiv.org/abs/2301.12597", "track": "cross", "type": "foundation", "mech": "representation", "milestone": false, "summary": "提出轻量 Q-Former 桥接冻结视觉编码器与冻结大语言模型，确立主流多模态特征投影连接范式。", "problem": "端到端联合训练大规模视觉编码器与大语言模型算力成本极高。", "mechanism": "可学习查询向量通过交叉注意力提取与文本最相关的视觉特征注入 LLM。", "evidence": "以极少可训练参数在零样本图像描述与视觉问答上大幅超越 Flamingo。"}, {"id": "toolformer-2023", "date": "2023.02", "year": 2023, "short": "Toolformer", "title": "Toolformer: Language Models Can Teach Themselves to Use Tools", "org": "Meta AI", "venue": "NeurIPS 2023 (arXiv:2302.04761)", "url": "https://arxiv.org/abs/2302.04761", "track": "software", "type": "framework", "mech": "text_interface", "milestone": false, "summary": "通过自监督采样与损失过滤训练模型自主决定何时调用外部 API、传入何种参数，并将 API 返回结果融入后续生成。", "problem": "人工编写 Few-shot 提示难以泛化到多样化的外部信息获取时机。", "mechanism": "根据 API 返回值是否降低后续 token 预测困惑度来筛选有效工具调用数据。", "evidence": "使 6.7B 模型在多个外部信息依赖任务上超越更大规模纯文本基线。"}, {"id": "augmented-lms-2023", "date": "2023.02", "year": 2023, "short": "Augmented LMs 综述", "title": "Augmented Language Models: a Survey", "org": "Meta AI", "venue": "TMLR 2023 (arXiv:2302.07842)", "url": "https://arxiv.org/abs/2302.07842", "track": "cross", "type": "survey", "mech": "text_interface", "milestone": false, "summary": "早期系统综述推理策略与外部工具、环境反馈增强语言模型的机制演进。", "problem": "语言模型扩展外部感知与行动接口的各类探索缺乏统一概念梳理。", "mechanism": "将工具调用与环境观察反馈归纳为语言模型的非参数化能力扩展。", "evidence": "成为早期连接工具增强与智能体感知的经典综述。"}, {"id": "palm-e-2023", "date": "2023.03", "year": 2023, "short": "PaLM-E", "title": "PaLM-E: An Embodied Multimodal Language Model", "org": "Google Research", "venue": "ICML 2023 (arXiv:2303.03378)", "url": "https://arxiv.org/abs/2303.03378", "track": "embodied", "type": "mechanism", "mech": "embodied_3d", "milestone": true, "summary": "将视觉图像与连续机器人传感状态编码为嵌入向量，与文本 token 交错构成 Multimodal Sentences 送入大模型推理。", "problem": "早期具身系统依赖外部检测器把物理世界先译成文字，丢失了连续空间与状态细节。", "mechanism": "多模态编码器将图像与位姿状态映射至语言嵌入空间，高层规划输出交由底层控制器执行。", "evidence": "在真实移动机械臂长程取物中实现受人为干扰后的闭环重新观察与恢复。"}, {"id": "zson-2023", "date": "2023.03", "year": 2023, "short": "Zero-Shot Object Nav", "title": "Can an Embodied Agent Find Your 'Cat-shaped Mug'? Zero-Shot Object-Goal Navigation", "org": "UMD / Adobe", "venue": "IEEE RA-L 2023 (arXiv:2303.03480)", "url": "https://arxiv.org/abs/2303.03480", "track": "embodied", "type": "mechanism", "mech": "embodied_3d", "milestone": false, "summary": "利用大语言模型结合视觉场景语义实现面向开放词汇目标物体的零样本具身视觉导航。", "problem": "传统物体导航局限于固定几十个预设类别，无法理解复杂属性组合指代。", "mechanism": "将前沿视觉识别标签转为文本环境状态，由 LLM 推理探索方向并定位目标。", "evidence": "在 Matterport3D 开放词汇具身导航任务上实现零样本突破。"}, {"id": "visual-chatgpt-2023", "date": "2023.03", "year": 2023, "short": "Visual ChatGPT", "title": "Visual ChatGPT: Talking, Drawing and Editing with Visual Foundation Models", "org": "Microsoft Research Asia", "venue": "arXiv:2303.04671", "url": "https://arxiv.org/abs/2303.04671", "track": "software", "type": "framework", "mech": "active_zoom", "milestone": false, "summary": "将纯文本 ChatGPT 与一系列视觉基础模型通过 Prompt Manager 连接，实现多轮视觉理解与编辑交互。", "problem": "2023 年初 ChatGPT 仅支持纯文本输入，无法直接感知与处理图像信息。", "mechanism": "设计视觉工具描述与中间文件名状态管理机制，实现委派式多模态交互。", "evidence": "开启大模型调度视觉专家工具系统的早期工程浪潮。"}, {"id": "matcha-2023", "date": "2023.03", "year": 2023, "short": "Matcha", "title": "Chat with the Environment: Interactive Multimodal Perception Using Large Language Models", "org": "University of Hamburg", "venue": "IROS 2023 (arXiv:2303.08268)", "url": "https://arxiv.org/abs/2303.08268", "track": "embodied", "type": "mechanism", "mech": "active_zoom", "milestone": true, "summary": "早期主动感知先驱：当外观视觉无法区分物体材质与重量时，让 LLM 主动调用敲击、触摸、称重等探测动作获取语言化感官证据。", "problem": "静态视觉观察无法揭示物体的密度、硬度、空心与否等隐含物理属性。", "mechanism": "LLM 决策发起信息性探测动作（Epistemic Actions），感官模块将声音/触觉/重量转为语言反馈。", "evidence": "在 NICOL/CoppeliaSim 仿真多模态材质识别任务中显著减少视觉歧义误抓。"}, {"id": "gpt4-2023", "date": "2023.03", "year": 2023, "short": "GPT-4 (Base)", "title": "GPT-4 Technical Report", "org": "OpenAI", "venue": "arXiv:2303.08774", "url": "https://arxiv.org/abs/2303.08774", "track": "cross", "type": "foundation", "mech": "text_interface", "milestone": true, "summary": "推理与结构化代码/HTML 理解能力实现代际跃升，成为 2023 年几乎所有文本网页（MindAct）、工具调用与代码智能体（SWE-agent）的核心大脑底座。", "problem": "早期模型在复杂长上下文逻辑推理与严格结构化工具参数输出上稳定性不足。", "mechanism": "大规模预训练与 RLHF 对齐大幅增强复杂指令遵循与多步状态推理能力。", "evidence": "直接支撑起 2023–2024 年智能体研究爆发的通用推理底座。"}, {"id": "reflexion-2023", "date": "2023.03", "year": 2023, "short": "Reflexion", "title": "Reflexion: Language Agents with Verbal Reinforcement Learning", "org": "Northeastern / MIT", "venue": "NeurIPS 2023 (arXiv:2303.11366)", "url": "https://arxiv.org/abs/2303.11366", "track": "software", "type": "framework", "mech": "temporal_state", "milestone": false, "summary": "将环境执行评估与报错信号转化为自然语言自我反思，作为跨轮次增强反馈观察存入情景记忆。", "problem": "二值化的环境成败信号信息量稀疏，模型难以从中定位具体观察或推理失误。", "mechanism": "引入自我反思模块解析环境反馈并生成诊断性自然语言提示指导下一轮交互。", "evidence": "在 ALFWorld 与 HotpotQA 上显著提升多轮试错任务成功率。"}, {"id": "mm-react-2023", "date": "2023.03", "year": 2023, "short": "MM-ReAct", "title": "MM-ReAct: Prompting ChatGPT for Multimodal Reasoning and Action", "org": "Microsoft Azure AI", "venue": "arXiv:2303.11381", "url": "https://arxiv.org/abs/2303.11381", "track": "software", "type": "framework", "mech": "active_zoom", "milestone": false, "summary": "利用文本化坐标与图像文件路径占位符将多模态视觉专家工具融入 ReAct 循环，实现多步视觉信息获取。", "problem": "纯文本大模型需要一种可扩展的文本协议来接收图像局部识别与空间位置反馈。", "mechanism": "以占位符与结构化工具输出形式在文本上下文中传递图像/视频观察结果。", "evidence": "展示纯文本 LLM 结合视觉专家工具处理复杂多模态任务的可行性。"}, {"id": "rci-2023", "date": "2023.03", "year": 2023, "short": "RCI (Computer Tasks)", "title": "Language Models can Solve Computer Tasks", "org": "UC Berkeley", "venue": "NeurIPS 2023 (arXiv:2303.17491)", "url": "https://arxiv.org/abs/2303.17491", "track": "software", "type": "framework", "mech": "text_interface", "milestone": false, "summary": "探索纯语言模型直接读取结构化屏幕/网页文本状态并结合递归批判改进（RCI）完成计算机操作任务。", "problem": "缺乏专门训练数据时，纯文本大模型能否直接依靠 DOM/文本界面执行电脑操作。", "mechanism": "采用“执行 → 递归批判 → 修正”循环，结合结构化屏幕文本观察完成 MiniWoB++ 任务。", "evidence": "在 MiniWoB++ 基准上大幅超越既往强化学习与监督学习智能体。"}, {"id": "hugginggpt-2023", "date": "2023.03", "year": 2023, "short": "HuggingGPT", "title": "HuggingGPT: Solving AI Tasks with ChatGPT and its Friends in Hugging Face", "org": "ZJU / Microsoft", "venue": "NeurIPS 2023 (arXiv:2303.17580)", "url": "https://arxiv.org/abs/2303.17580", "track": "software", "type": "framework", "mech": "active_zoom", "milestone": false, "summary": "典型委派式多模态感知：以纯文本 LLM 为控制中枢，调度 Hugging Face 社区的图像检测、语音识别等专家模型并将文本化结果汇总。", "problem": "2023 年初通用大模型尚无原生多模态输入端口，需借助模型社区工具完成跨模态感知。", "mechanism": "任务规划 → 模型描述匹配选择 → 专家工具执行 → 文本结果聚合。", "evidence": "确立了早期模块化多模态智能体系统的标准协同管线。"}, {"id": "gen-agents-2023", "date": "2023.04", "year": 2023, "short": "Generative Agents", "title": "Generative Agents: Interactive Simulacra of Human Behavior", "org": "Stanford / Google", "venue": "UIST 2023 (arXiv:2304.03442)", "url": "https://arxiv.org/abs/2304.03442", "track": "software", "type": "framework", "mech": "temporal_state", "milestone": false, "summary": "在开放沙盒小镇中持续感知周边实体状态与事件流，通过重要性评分写入记忆流并动态检索反思。", "problem": "长周期交互智能体需要将瞬时环境感知转化为可随时间沉淀与演化的持久化认知。", "mechanism": "感知环境树状状态变化 → 自然语言事件流记录 → 周期性高层反思抽象。", "evidence": "成为智能体“感知—记忆—规划”长周期社会模拟的里程碑架构。"}, {"id": "llava-2023", "date": "2023.04", "year": 2023, "short": "LLaVA", "title": "Visual Instruction Tuning (LLaVA)", "org": "UW-Madison / Microsoft", "venue": "NeurIPS 2023 (arXiv:2304.08485)", "url": "https://arxiv.org/abs/2304.08485", "track": "cross", "type": "foundation", "mech": "representation", "milestone": false, "summary": "通过线性投影层连接 CLIP 视觉编码器与大语言模型并引入多模态指令微调，成为后续众多 GUI/具身视觉智能体的开源基座。", "problem": "开源社区缺乏端到端对齐视觉特征与指令遵循能力的通用视觉语言基座。", "mechanism": "利用 GPT-4 合成图文对话指令数据 + 轻量 MLP 视觉特征投影微调。", "evidence": "直接催生了后续 CogAgent、Ferret-UI、SeeClick 等垂直界面感知模型。"}, {"id": "chameleon-comp-2023", "date": "2023.04", "year": 2023, "short": "Chameleon (Tool Comp.)", "title": "Chameleon: Plug-and-Play Compositional Reasoning with Large Language Models", "org": "Microsoft / UCLA", "venue": "NeurIPS 2023 (arXiv:2304.09842)", "url": "https://arxiv.org/abs/2304.09842", "track": "software", "type": "framework", "mech": "active_zoom", "milestone": false, "summary": "由 LLM 规划器把搜索引擎、视觉模型与 Python 函数等即插即用工具模块编排为程序，开展组合多模态推理。", "problem": "多模态推理往往需要跨文本检索与局部图像属性提取的动态组合。", "mechanism": "自然语言规划器生成模块化工具调用序列并传递中间视觉/文本观察结果。", "evidence": "在 ScienceQA 与 TabMWP 等多模态推理基准上大幅超越单模型基线。"}, {"id": "help-feedback-2023", "date": "2023.04", "year": 2023, "short": "Help Feedback Grounding", "title": "Improving Grounded Language Understanding in a Collaborative Environment by Interacting with Agents Through Help Feedback", "org": "Cornell Univ.", "venue": "EACL 2023 (arXiv:2304.10750)", "url": "https://arxiv.org/abs/2304.10750", "track": "embodied", "type": "mechanism", "mech": "active_zoom", "milestone": false, "summary": "在协作交互环境中研究智能体通过主动求助与接收人类纠正反馈改善接地语言理解的机制。", "problem": "复杂多步任务中单靠初始指令往往无法消除环境视觉指代歧义。", "mechanism": "将交互过程中的人类纠偏与补充观察转化为在线接地监督信号。", "evidence": "在 CerealBar 协作交互环境中显著提升多步状态接地精度。"}, {"id": "interngpt-2023", "date": "2023.05", "year": 2023, "short": "InternGPT", "title": "InternGPT: Solving Vision-Centric Tasks by Interacting with ChatGPT Beyond Language", "org": "Shanghai AI Lab", "venue": "arXiv:2305.05662", "url": "https://arxiv.org/abs/2305.05662", "track": "software", "type": "framework", "mech": "active_zoom", "milestone": false, "summary": "引入手势与光标指点指令协同视觉分割/检测工具，支持对图像特定区域进行精细交互式视觉定位。", "problem": "纯语言描述在指代图像中密集相似物体时存在严重歧义。", "mechanism": "结合用户指点轨迹与 SAM 等分割工具实现高精度局部视觉交互。", "evidence": "展示多模态指点交互在精细视觉感知中的独特优势。"}, {"id": "instructblip-2023", "date": "2023.05", "year": 2023, "short": "InstructBLIP", "title": "InstructBLIP: Towards General-purpose Vision-Language Models with Instruction Tuning", "org": "Salesforce Research", "venue": "NeurIPS 2023 (arXiv:2305.06500)", "url": "https://arxiv.org/abs/2305.06500", "track": "cross", "type": "foundation", "mech": "representation", "milestone": false, "summary": "在 BLIP-2 的 Q-Former 中引入指令感知（Instruction-aware）视觉特征提取，使视觉编码器能根据当前任务指令动态抽取相关区域特征。", "problem": "静态视觉特征提取无法随当前任务指令焦点变化而调整关注重点。", "mechanism": "将文本指令同时输入 Q-Former 与 LLM，引导交叉注意力聚焦任务相关视觉线索。", "evidence": "确立了“任务指令条件化视觉特征提取”在多模态感知中的有效性。"}, {"id": "embodiedgpt-2023", "date": "2023.05", "year": 2023, "short": "EmbodiedGPT", "title": "EmbodiedGPT: Vision-Language Pre-Training via Embodied Chain of Thought", "org": "Shanghai AI Lab", "venue": "NeurIPS 2023 (arXiv:2305.15021)", "url": "https://arxiv.org/abs/2305.15021", "track": "embodied", "type": "mechanism", "mech": "embodied_3d", "milestone": false, "summary": "构建面向具身任务的视觉-语言基础模型，利用 LLM 生成的规划查询动态抽取任务相关视觉特征以连接低层控制。", "problem": "通用图文数据缺乏具身操作所需的连续动作因果与物理状态变迁理解。", "mechanism": "Ego4D 视频具身思维链预训练 + 查询式任务相关视觉特征提取器。", "evidence": "在 Franka 真机与仿真操作任务中实现高层规划与低层视觉控制的闭环对齐。"}, {"id": "asking-before-acting-2023", "date": "2023.05", "year": 2023, "short": "Asking Before Acting", "title": "Asking Before Acting: Gather Information in Embodied Decision Making with Language Models", "org": "Tsinghua / Tsinghua-AIR", "venue": "arXiv:2305.15695", "url": "https://arxiv.org/abs/2305.15695", "track": "embodied", "type": "mechanism", "mech": "active_zoom", "milestone": false, "summary": "针对具身决策中环境观察不完整的问题，引导语言模型在执行前主动提问以收集缺失信息。", "problem": "部分可观测具身任务中盲目行动会导致不可逆错误。", "mechanism": "模型评估当前观察不确定性并生成澄清性问询获取环境隐含状态。", "evidence": "在部分可观测家庭任务中显著降低错误执行率。"}, {"id": "voyager-2023", "date": "2023.05", "year": 2023, "short": "Voyager", "title": "Voyager: An Open-Ended Embodied Agent with Large Language Models", "org": "NVIDIA / UT Austin / Caltech", "venue": "TMLR 2023 (arXiv:2305.16291)", "url": "https://arxiv.org/abs/2305.16291", "track": "embodied", "type": "framework", "mech": "embodied_3d", "milestone": false, "summary": "在开放世界 Minecraft 中持续读取周围方块/物品状态与代码执行报错反馈，结合自我验证闭环迭代可复用技能代码库。", "problem": "开放探索环境中环境状态持续演变，需要结合执行反馈动态修正行为程序。", "mechanism": "自动课程表 + 环境状态文本观察 + 执行错误自反思验证。", "evidence": "解锁科技树速度比既往基线快 3.3 倍，展示环境反馈驱动的终身探索能力。"}, {"id": "alphablock-2023", "date": "2023.05", "year": 2023, "short": "AlphaBlock", "title": "AlphaBlock: Embodied Finetuning for Vision-Language Reasoning in Robot Manipulation", "org": "Tsinghua", "venue": "arXiv:2305.18898", "url": "https://arxiv.org/abs/2305.18898", "track": "embodied", "type": "mechanism", "mech": "embodied_3d", "milestone": false, "summary": "面向机械臂积木操作开展视觉-语言推理的具身微调，强化多步物理堆叠中的空间关系视觉感知。", "problem": "通用多模态模型对三维物理支撑、遮挡与堆叠稳定性的空间感知严重不足。", "mechanism": "采集多视角机器人操作视觉推理轨迹微调多模态基座。", "evidence": "显著提升机械臂在复杂空间排列与长程积木操作中的规划准确率。"}, {"id": "mind2web-2023", "date": "2023.06", "year": 2023, "short": "Mind2Web / MindAct", "title": "Mind2Web: Towards a Generalist Agent for the Web", "org": "Ohio State University", "venue": "NeurIPS 2023 (arXiv:2306.06070)", "url": "https://arxiv.org/abs/2306.06070", "track": "software", "type": "mechanism", "mech": "text_interface", "milestone": true, "summary": "构建 137 个真实网站 2,350 项任务数据集，针对单页平均 1,135 个 HTML 元素的过载难题，提出“小模型排序筛 Top-k + 大模型多选预测动作”。", "problem": "真实网页原始 HTML 动辄数万 token，直接输入 LLM 导致上下文溢出且定位准确率极低。", "mechanism": "DeBERTa 交叉编码器按任务与历史对元素打分过滤，Flan-T5/GPT 对精简片段分组多选。", "evidence": "Cross-Task 单步成功率从直接生成的 17.5% 提升至 41.0%（但离线全轨迹成功率仅 4.0%）。"}, {"id": "restgpt-2023", "date": "2023.06", "year": 2023, "short": "RestGPT", "title": "RestGPT: Connecting Large Language Models with Real-World RESTful APIs", "org": "Nanjing Univ.", "venue": "arXiv:2306.06624", "url": "https://arxiv.org/abs/2306.06624", "track": "software", "type": "framework", "mech": "text_interface", "milestone": false, "summary": "连接语言模型与真实世界 RESTful API，解析多步嵌套 JSON 响应结果作为状态观察与下一步调用依据。", "problem": "真实软件服务返回的结构化 JSON 往往字段繁杂且存在多级依赖。", "mechanism": "粗到细在线规划器 + API 响应解析器提取关键状态字段反馈给决策器。", "evidence": "在 TMDB 电影与 Spotify 音乐真实 API 生态上验证复杂接口观察解析能力。"}, {"id": "shikra-2023", "date": "2023.06", "year": 2023, "short": "Shikra", "title": "Shikra: Unleashing Multimodal LLM's Referential Dialogue Magic", "org": "SenseTime / CUHK", "venue": "arXiv:2306.15195", "url": "https://arxiv.org/abs/2306.15195", "track": "cross", "type": "mechanism", "mech": "spatial_grounding", "milestone": false, "summary": "赋予多模态大语言模型自然语言指代与数值边界框坐标直接对话能力，无需外挂复杂检测器词汇表。", "problem": "早期多模态模型无法在自然语言生成流中直接输入与输出精确空间坐标框。", "mechanism": "将边界框归一化坐标直接表示为自然语言数字 token 参与多模态指令微调。", "evidence": "为后续 SeeClick 等直接输出文本坐标的 GUI 定位模型提供了关键训练范式。"}, {"id": "aitw-2023", "date": "2023.07", "year": 2023, "short": "AITW", "title": "Android in the Wild: A Large-Scale Dataset for Android Device Control", "org": "Google Research", "venue": "NeurIPS 2023 (arXiv:2307.10088)", "url": "https://arxiv.org/abs/2307.10088", "track": "software", "type": "benchmark", "mech": "spatial_grounding", "milestone": false, "summary": "发布 71.5 万条真实安卓设备屏幕截图与连续触摸手势轨迹，推动移动端智能体从依赖控件树转向直接感知像素坐标。", "problem": "大量移动应用缺乏完整无障碍树元数据，需要大规模真实屏幕操作轨迹支撑视觉学习。", "mechanism": "覆盖 3 万条指令与 8 种机型的屏幕像素与连续手势坐标映射数据集。", "evidence": "成为 CogAgent、SeeClick 等早期纯视觉 GUI 模型的核心训练与评测基石。"}, {"id": "webarena-2023", "date": "2023.07", "year": 2023, "short": "WebArena", "title": "WebArena: A Realistic Web Environment for Building Autonomous Agents", "org": "CMU", "venue": "ICLR 2024 (arXiv:2307.13854)", "url": "https://arxiv.org/abs/2307.13854", "track": "software", "type": "benchmark", "mech": "text_interface", "milestone": true, "summary": "自托管可复现的电商、论坛、代码协作与 CMS 真实网页环境，提供无障碍树（a11y tree）/DOM/截图观察及程序化状态验收。", "problem": "离线网页快照无法测试动作执行后的真实页面跳转与持久化状态改变。", "mechanism": "构建 812 个完整端到端网页任务，基于数据库与页面最终状态做客观评分。", "evidence": "早期 GPT-4 仅凭结构化文本观察成功率仅 14.41%，暴露多步网页状态追踪短板。"}, {"id": "rt2-2023", "date": "2023.07", "year": 2023, "short": "RT-2", "title": "RT-2: Vision-Language-Action Models Transfer Web Knowledge to Robotic Control", "org": "Google DeepMind", "venue": "CoRL 2023 (arXiv:2307.15818)", "url": "https://arxiv.org/abs/2307.15818", "track": "embodied", "type": "mechanism", "mech": "embodied_3d", "milestone": true, "summary": "将机器人连续控制自由度离散化为类似文本 token 的 Action Token，与大规模网络视觉语言数据联合微调，实现语义泛化操作。", "problem": "传统机器人策略缺乏对开放世界物体语义、属性与空间关系的视觉理解能力。", "mechanism": "在统一 VLM 词表中把动作输出表示为可生成的字符串 token，实现感知到控制的端到端映射。", "evidence": "在约 6,000 次真机评估中展现出对未见语义指令的强泛化。"}, {"id": "agentbench-2023", "date": "2023.08", "year": 2023, "short": "AgentBench", "title": "AgentBench: Evaluating LLMs as Agents", "org": "Tsinghua", "venue": "ICLR 2024 (arXiv:2308.03688)", "url": "https://arxiv.org/abs/2308.03688", "track": "software", "type": "benchmark", "mech": "multi_step_loop", "milestone": false, "summary": "跨操作系统终端、数据库、网页与文本游戏等八类交互环境综合评测大模型智能体的多轮环境观察与决策能力。", "problem": "早期评测局限于单一数据集，缺乏跨多类真实软件交互环境的横向对比。", "mechanism": "构建统一多轮交互沙盒，评估闭源与开源模型在长程状态反馈下的表现。", "evidence": "揭示当时闭源模型（GPT-4）与开源模型在多轮环境状态跟踪上的巨大代差。"}, {"id": "wang-survey-2023", "date": "2023.08", "year": 2023, "short": "LLM Autonomous Agents 综述 (Wang et al.)", "title": "A Survey on Large Language Model based Autonomous Agents", "org": "Renmin University (RUC)", "venue": "FCS 2024 (arXiv:2308.11432)", "url": "https://arxiv.org/abs/2308.11432", "track": "cross", "type": "survey", "mech": "text_interface", "milestone": false, "summary": "提出由 Profiling、Memory、Planning 与 Action 构成的经典自主智能体四模块架构，梳理环境观察与反馈在闭环中的位置（用户下载库核验）。", "problem": "早期大模型自主智能体设计分散，亟需从架构与环境交互角度进行系统归纳。", "mechanism": "总结文本、视觉及环境状态观察进入智能体记忆与规划模块的主流路径。", "evidence": "成为最早的系统性 LLM Autonomous Agents 综述之一。"}, {"id": "qwenvl-2023", "date": "2023.08", "year": 2023, "short": "Qwen-VL", "title": "Qwen-VL: A Versatile Vision-Language Model for Understanding, Localization, Text Reading, and Beyond", "org": "Alibaba Qwen Team", "venue": "arXiv:2308.12966", "url": "https://arxiv.org/abs/2308.12966", "track": "cross", "type": "foundation", "mech": "representation", "milestone": false, "summary": "原生支持高分辨率图像、细粒度 OCR 与边界框坐标输出，成为 SeeClick、OS-Atlas 等众多开源 GUI 定位模型的首选预训练基座。", "problem": "早期开源 VLM 分辨率低（224px）且缺乏细粒度文字识读与坐标定位对齐。", "mechanism": "引入位置感知视觉-语言适配器与多任务（OCR/Grounding/VQA）三阶段预训练。", "evidence": "奠定了开源视觉定位与界面智能体的主流基座架构。"}, {"id": "xi-survey-2023", "date": "2023.09", "year": 2023, "short": "LLM Agents 综述 (Xi et al.)", "title": "The Rise and Potential of Large Language Model Based Agents: A Survey", "org": "Fudan NLP", "venue": "arXiv:2309.07864", "url": "https://arxiv.org/abs/2309.07864", "track": "cross", "type": "survey", "mech": "representation", "milestone": true, "summary": "提出由 Brain、Perception、Action 构成的 LLM 智能体经典三元框架，系统梳理文本、视觉与听觉等多模态感知接入路径（用户下载库核验）。", "problem": "2023 年智能体工作井喷，亟需统一的概念架构明确界定感知模块在系统中的位置。", "mechanism": "将多模态输入编码与环境感官接口统一归纳为 Perception 组件。", "evidence": "成为领域内引用最广泛的智能体架构基准参考文献之一。"}, {"id": "gpt4v-2023", "date": "2023.09", "year": 2023, "short": "GPT-4V(ision)", "title": "GPT-4V(ision) System Card & Technical Report", "org": "OpenAI", "venue": "OpenAI Technical Report (2023.09)", "url": "https://openai.com/research/gpt-4v-system-card", "track": "cross", "type": "foundation", "mech": "representation", "milestone": true, "summary": "首次将原生高能力视觉输入并入前沿通用大模型，直接引爆后续零样本网页与桌面屏幕截图智能体研究浪潮。", "problem": "此前纯文本大模型无法直接读取未结构化的屏幕截图与复杂视觉场景。", "mechanism": "端到端多模态视觉-语言联合推理底座。", "evidence": "成为 SoM、MM-Navigator、SeeAct、WebVoyager、OmniParser 等工作的核心底座。"}, {"id": "you-only-look-screens-2023", "date": "2023.09", "year": 2023, "short": "You Only Look at Screens", "title": "You Only Look at Screens: Multimodal Chain-of-Action Agents", "org": "Shanghai Jiao Tong Univ.", "venue": "Findings of ACL 2024 (arXiv:2309.11436)", "url": "https://arxiv.org/abs/2309.11436", "track": "software", "type": "mechanism", "mech": "representation", "milestone": false, "summary": "探索完全摆脱底层结构树、仅凭屏幕截图输入与多模态动作链完成界面交互的早期纯视觉路径。", "problem": "依赖 DOM/XML 视图树在跨应用与游戏界面中泛化性受限。", "mechanism": "提出屏幕像素视觉编码结合动作历史链的纯视觉界面操作框架。", "evidence": "在 AITW 与网页数据集上验证纯屏幕截图输入的端到端潜力。"}, {"id": "llm-grounder-2023", "date": "2023.09", "year": 2023, "short": "LLM-Grounder", "title": "LLM-Grounder: Open-Vocabulary 3D Visual Grounding with Large Language Model as an Agent", "org": "HKU / UC Berkeley", "venue": "ICRA 2024 (arXiv:2309.12311)", "url": "https://arxiv.org/abs/2309.12311", "track": "embodied", "type": "mechanism", "mech": "embodied_3d", "milestone": true, "summary": "让 LLM 充当智能体拆解复杂三维空间指令，主动调度 OpenScene/LERF 等 3D 视觉定位工具筛选候选并推理空间关系。", "problem": "三维物理场景包含复杂遮挡与相对方位关系，直接端到端匹配开放词汇指令极其困难。", "mechanism": "LLM 主动解析目标与参照物，调用 3D 特征场工具完成多步空间过滤。", "evidence": "在 ScanRefer 复杂空间关系查询上零样本大幅超越传统监督 3D 定位模型。"}, {"id": "conceptgraphs-2023", "date": "2023.09", "year": 2023, "short": "ConceptGraphs", "title": "ConceptGraphs: Open-Vocabulary 3D Scene Graphs for Perception and Planning", "org": "MIT / Toronto / CMU", "venue": "ICRA 2024 (arXiv:2309.16650)", "url": "https://arxiv.org/abs/2309.16650", "track": "embodied", "type": "mechanism", "mech": "embodied_3d", "milestone": false, "summary": "融合多视角视觉基础模型输出构建紧凑的开放词汇 3D 场景图，为具身智能体提供结构化物体与空间关系表征。", "problem": "稠密三维点云缺乏高层物体语义与拓扑关系，难以直接供大语言模型推理。", "mechanism": "利用 SAM 与 CLIP 跨帧关联融合生成带语义节点的 3D 场景图。", "evidence": "在真机移动操作与开放词汇空间导航中显著提升长程感知效率。"}, {"id": "som-2023", "date": "2023.10", "year": 2023, "short": "Set-of-Mark (SoM)", "title": "Set-of-Mark Prompting Unleashes Extraordinary Visual Grounding in GPT-4V", "org": "Microsoft / NTU", "venue": "arXiv:2310.11441", "url": "https://arxiv.org/abs/2310.11441", "track": "software", "type": "mechanism", "mech": "spatial_grounding", "milestone": true, "summary": "提出先用分割模型切分图像区域并叠加数字字母标号，让多模态大模型直接引用编号完成精准空间定位。", "problem": "GPT-4V 虽能看懂图像语义，但直接回归精确二维像素坐标或边界框能力极弱。", "mechanism": "将连续空间坐标回归转化为离散视觉标号（Visual Prompting）选择问题。", "evidence": "在 RefCOCOg 等指代定位基准上零样本超越全监督微调基线，直接催生网页/GUI 标号潮。"}, {"id": "mm-navigator-2023", "date": "2023.11", "year": 2023, "short": "MM-Navigator", "title": "GPT-4V in Wonderland: Large Multimodal Models for Zero-Shot Smartphone GUI Navigation", "org": "Microsoft", "venue": "arXiv:2311.07562", "url": "https://arxiv.org/abs/2311.07562", "track": "software", "type": "framework", "mech": "spatial_grounding", "milestone": false, "summary": "早期系统评测 GPT-4V 结合屏幕标号直接观察手机截图完成零样本跨应用导航的可行性。", "problem": "验证通用原生多模态大模型是否无需专门微调即可充当移动端界面感知器。", "mechanism": "截图输入 + 动作历史 + 界面元素标号提示实现闭环导航。", "evidence": "在 AITW 基准上展示出远超纯文本模型的零样本屏幕理解潜力。"}, {"id": "cogagent-2023", "date": "2023.12", "year": 2023, "short": "CogAgent", "title": "CogAgent: A Visual Language Model for GUI Agents", "org": "Tsinghua / Zhipu AI", "venue": "CVPR 2024 (arXiv:2312.08914)", "url": "https://arxiv.org/abs/2312.08914", "track": "software", "type": "mechanism", "mech": "representation", "milestone": true, "summary": "在 224×224 全局路径外新增轻量 1120×1120 高分辨率视觉编码分支经交叉注意力注入解码器，在控算力下看清 GUI 小字并首次凭纯截图打赢读 HTML 的方法。", "problem": "常规 VLM 缩图（224/448）会糊掉界面小图标与密集文字，全图高分编码则计算开销爆炸。", "mechanism": "双分辨率编码 + Cross-Attention 细节注入，兼顾全局布局与局部清晰度。", "evidence": "Mind2Web 仅输入截图达 58.2%（超越输入 HTML 最优 54.4%），DocVQA 提升至 74.1 且算力减半。"}, {"id": "appagent-2023", "date": "2023.12", "year": 2023, "short": "AppAgent", "title": "AppAgent: Multimodal Agents as Smartphone Users", "org": "Tencent / HKUST", "venue": "CHI 2025 (arXiv:2312.13771)", "url": "https://arxiv.org/abs/2312.13771", "track": "software", "type": "framework", "mech": "multi_step_loop", "milestone": false, "summary": "让多模态智能体通过观察操作前后的手机截图变化自主探索应用界面，沉淀控件功能文档库并在部署时复用。", "problem": "不依赖系统底层 API 仅靠视觉操作复杂 App 时，模型缺乏对未知图标功能的先验知识。", "mechanism": "探索期对比前后帧界面状态变化归纳控件语义文档，执行期结合标号截图决策。", "evidence": "在 10 款主流商业 App 的 50 项复杂任务上展现稳健跨应用操作能力。"}, {"id": "vstar-2023", "date": "2023.12", "year": 2023, "short": "V* (Visual Search)", "title": "V*: Guided Visual Search as a Core Mechanism in Multimodal LLMs", "org": "UCSD / NYU", "venue": "CVPR 2024 (arXiv:2312.14135)", "url": "https://arxiv.org/abs/2312.14135", "track": "software", "type": "mechanism", "mech": "active_zoom", "milestone": true, "summary": "提出由 LLM 常识引导的迭代式局部视觉搜索（SEAL 框架），像人眼扫视一样在超高分辨率图像中主动定位微小细节目标。", "problem": "单次全局视觉编码在面对 4K 级复杂场景中的微小物体时必然丢失细节。", "mechanism": "利用世界知识推理目标可能出现的上下文区域，逐步缩放裁剪开展高分辨率局部检视。", "evidence": "在 V*Bench 高分辨率细粒度视觉搜索基准上大幅超越 GPT-4V。"}, {"id": "seeact-2024", "date": "2024.01", "year": 2024, "short": "SeeAct", "title": "GPT-4V(ision) is a Generalist Web Agent, if Grounded", "org": "Ohio State University", "venue": "ICML 2024 (arXiv:2401.01614)", "url": "https://arxiv.org/abs/2401.01614", "track": "software", "type": "mechanism", "mech": "spatial_grounding", "milestone": true, "summary": "将视觉网页任务明确拆解为动作生成与 Action Grounding，复用 MindAct 排序器等对比映射方案，实证“把动作意图落到实际元素”是核心瓶颈。", "problem": "多模态大模型虽能根据截图写出合理操作计划，却常因映射错元素而执行失败。", "mechanism": "对比属性匹配、HTML 文本候选多选（复用 MindAct DeBERTa 排序器）与图像标注三种接地路径。", "evidence": "在线网站任务自动接地成功率 37.8%，而人工辅助 Oracle Grounding 高达 51.1%（暴露 13.3% 接地鸿沟）。"}, {"id": "seeclick-2024", "date": "2024.01", "year": 2024, "short": "SeeClick", "title": "SeeClick: Harnessing GUI Grounding for Advanced Visual GUI Agents", "org": "NJU / Shanghai AI Lab", "venue": "ACL 2024 (arXiv:2401.10935)", "url": "https://arxiv.org/abs/2401.10935", "track": "software", "type": "mechanism", "mech": "spatial_grounding", "milestone": true, "summary": "将 GUI Grounding 独立为专项预训练能力，构建约 100 万条“截图—指令—坐标”样本训练纯像素定位，并发布跨三端定位基准 ScreenSpot。", "problem": "依赖 HTML/a11y 树不仅在桌面/移动端常不可用，且文本冗长；通用 VLM 缺乏像素坐标定位能力。", "mechanism": "在 Qwen-VL 上开展大规模网页与移动端指代坐标回归预训练，推理时仅接收截图输出归一化坐标。", "evidence": "ScreenSpot 平均定位准确率达 53.4%（超越 CogAgent 47.4% 与 GPT-4V 16.2%），带动 MiniWoB 下游提升至 67.0%。"}, {"id": "visualwebarena-2024", "date": "2024.01", "year": 2024, "short": "VisualWebArena", "title": "VisualWebArena: Evaluating Multimodal Agents on Realistic Visually Grounded Web Tasks", "org": "CMU", "venue": "ACL 2024 (arXiv:2401.13649)", "url": "https://arxiv.org/abs/2401.13649", "track": "software", "type": "benchmark", "mech": "multi_step_loop", "milestone": false, "summary": "构建 910 个必须依赖理解网页图像与视觉线索才能完成的真实多步网页任务，量化多模态网页智能体的视觉接地短板。", "problem": "早期网页基准多数任务仅靠读取文本或 a11y 树即可完成，无法检验真正的视觉感知必要性。", "mechanism": "引入图片商品比对、视觉属性筛选等跨模态网页任务与执行状态校验。", "evidence": "最佳多模态模型成功率仅 16.4%，而人类高达 88.7%，凸显视觉接地与多步交互的巨大差距。"}, {"id": "webvoyager-2024", "date": "2024.01", "year": 2024, "short": "WebVoyager", "title": "WebVoyager: Building an End-to-End Web Agent with Large Multimodal Models", "org": "CUHK / Tencent", "venue": "ACL 2024 (arXiv:2401.13919)", "url": "https://arxiv.org/abs/2401.13919", "track": "software", "type": "framework", "mech": "multi_step_loop", "milestone": true, "summary": "在真实开放网站上结合带交互元素标号的网页截图与在线浏览器执行反馈，构建端到端视觉网页闭环智能体。", "problem": "Mind2Web 等离线快照评测无法反映真实网页动态弹窗、广告遮挡与异步加载带来的交互挑战。", "mechanism": "实时注入 JS 提取可交互边界框并叠加标号，每步执行后重新截取最新页面状态。", "evidence": "在 15 个真实商业网站的开放任务中取得 59.1% 整任务成功率。"}, {"id": "mobile-agent-v1-2024", "date": "2024.01", "year": 2024, "short": "Mobile-Agent v1", "title": "Mobile-Agent: Autonomous Multi-Modal Mobile Device Agent with Visual Perception", "org": "Alibaba / BUPT", "venue": "ICLR 2024 W (arXiv:2401.16158)", "url": "https://arxiv.org/abs/2401.16158", "track": "software", "type": "framework", "mech": "multi_step_loop", "milestone": false, "summary": "提出纯视觉移动端自主智能体，利用 OCR 与图标检测工具感知屏幕控件并完成跨应用操作。", "problem": "移动设备跨应用操作难以获取统一 XML 视图树，需要纯视觉前端解析屏幕控件。", "mechanism": "串联视觉文本检测、图标定位与 MLLM 规划反思闭环。", "evidence": "验证了完全脱离系统底层元数据操控真实安卓生态的可行性。"}, {"id": "codeact-2024", "date": "2024.02", "year": 2024, "short": "CodeAct", "title": "Executable Code Actions Elicit Better LLM Agents", "org": "UIUC / Apple", "venue": "ICML 2024 (arXiv:2402.01030)", "url": "https://arxiv.org/abs/2402.01030", "track": "software", "type": "framework", "mech": "text_interface", "milestone": false, "summary": "将智能体动作与观察接口统一为可执行 Python 代码及解释器标准输出/报错堆栈反馈，大幅提升多步数据处理与环境交互效率。", "problem": "传统 JSON 格式工具调用在单轮内只能执行单一静态动作，观察过滤与状态处理能力受限。", "mechanism": "通过代码变量存储中间观察状态、循环过滤海量返回结果，并依据解释器报错动态调试。", "evidence": "在 17 个主流大模型上平均任务成功率比 JSON/文本动作高出最高 20%。"}, {"id": "screenai-2024", "date": "2024.02", "year": 2024, "short": "ScreenAI", "title": "ScreenAI: A Vision-Language Model for UI and Infographics Understanding", "org": "Google Research", "venue": "IJCAI 2024 (arXiv:2402.07912)", "url": "https://arxiv.org/abs/2402.07912", "track": "software", "type": "mechanism", "mech": "representation", "milestone": false, "summary": "提出统一 UI 与信息图的屏幕元素文本化结构表示（Screen Annotation），并合成大规模导航、问答与摘要数据训练屏幕专用视觉模型。", "problem": "UI 界面与信息图具有独特的空间布局语言，缺乏统一的结构化视觉预训练范式。", "mechanism": "利用检测器抽取控件框与层级关系生成合成指令数据，结合可变宽高比编码训练。", "evidence": "在 Screen2Words、Widget Captioning 与 UI 导航任务上刷新多项 SOTA。"}, {"id": "ufo-2024", "date": "2024.02", "year": 2024, "short": "UFO", "title": "UFO: A UI-Focused Agent for Windows OS Interaction", "org": "Microsoft Research", "venue": "arXiv:2402.07939", "url": "https://arxiv.org/abs/2402.07939", "track": "software", "type": "framework", "mech": "multi_step_loop", "milestone": false, "summary": "面向 Windows 桌面环境任务完成的双智能体框架，融合屏幕截图视觉与 Windows UI Automation 控件树实现跨应用协同。", "problem": "桌面应用界面复杂且跨软件切换频繁，单一模态观察难以兼顾全局视觉与精确控件属性。", "mechanism": "AppAgent 负责跨软件全局视觉感知调度，ActAgent 融合截图与控件元数据执行局部操作。", "evidence": "在 9 款主流 Windows 办公软件的 50 项跨应用任务上展现高完成率。"}, {"id": "screenagent-2024", "date": "2024.02", "year": 2024, "short": "ScreenAgent", "title": "ScreenAgent: A Vision Language Model-driven Computer Control Agent", "org": "RUC / Tsinghua", "venue": "IJCAI 2024 (arXiv:2402.07945)", "url": "https://arxiv.org/abs/2402.07945", "track": "software", "type": "framework", "mech": "multi_step_loop", "milestone": false, "summary": "构建由视觉语言模型驱动的连续屏幕鼠标键盘操控智能体及多步桌面交互轨迹数据集。", "problem": "缺乏统一覆盖规划、动作执行与反思的连续全屏桌面控制流水线。", "mechanism": "在 Planning-Acting-Reflection 循环中持续读取高分屏截图并输出精确键鼠事件。", "evidence": "开源全流程桌面控制数据集并验证全屏视觉控制的可行性。"}, {"id": "omniact-2024", "date": "2024.02", "year": 2024, "short": "OmniACT", "title": "OmniACT: A Dataset and Benchmark for Enabling Multimodal Generalist Autonomous Agents for Desktop and Web", "org": "UIUC", "venue": "ECCV 2024 (arXiv:2402.17553)", "url": "https://arxiv.org/abs/2402.17553", "track": "software", "type": "benchmark", "mech": "spatial_grounding", "milestone": false, "summary": "发布跨桌面与网页端的 9.8K 多模态通用操作脚本基准，并提出基于 UI 元素过滤模块 DetACT 的基线。", "problem": "需要同时评估智能体在静态屏幕视觉定位与多行可执行操作序列生成上的综合能力。", "mechanism": "结合屏幕检测与 OCR 过滤关键控件，生成 PyAutoGUI 可执行控制脚本。", "evidence": "量化揭示跨平台原生桌面与网页界面视觉接地泛化难点。"}, {"id": "gemini15-2024", "date": "2024.03", "year": 2024, "short": "Gemini 1.5 Pro", "title": "Gemini 1.5: Unlocking Multimodal Understanding across Millions of Tokens of Context", "org": "Google DeepMind", "venue": "arXiv:2403.05530", "url": "https://arxiv.org/abs/2403.05530", "track": "cross", "type": "foundation", "mech": "av_stream", "milestone": false, "summary": "将原生多模态上下文窗口拓展至百万 token，原生处理长视频流与音频流，直接奠定后续长程视频交互智能体的基座上限。", "problem": "早期多模态模型上下文极短，无法直接输入长时视频流或数十步高分辨率交互轨迹。", "mechanism": "稀疏 MoE 架构支持超长多模态序列跨模态检索与时间定位。", "evidence": "在数小时长视频与长音频大海捞针测试中实现 >99% 检索准确率。"}, {"id": "cradle-2024", "date": "2024.03", "year": 2024, "short": "Cradle", "title": "Cradle: Empowering Foundation Agents Towards General Computer Control", "org": "Tsinghua / BAAI", "venue": "ICML 2025 (arXiv:2403.03186)", "url": "https://arxiv.org/abs/2403.03186", "track": "software", "type": "framework", "mech": "multi_step_loop", "milestone": false, "summary": "提出通用计算机控制（GCC）范式：无论是复杂 3A 游戏还是专业办公软件，统一仅以连续视频帧截图为观察输入、键鼠为动作输出。", "problem": "不同软件与游戏底层接口完全封闭，需要纯粹模仿人类视听与键鼠交互的通用框架。", "mechanism": "设计信息收集（Information Gathering）模块从连续视频帧中提取关键状态并维护记忆反思。", "evidence": "成功在《荒野大镖客2》主线剧情及多款桌面软件中实现长时程自主操控。"}, {"id": "videoagent-2024", "date": "2024.03", "year": 2024, "short": "VideoAgent", "title": "VideoAgent: Long-form Video Understanding with Large Language Model as Agent", "org": "BIGAI / Peking Univ.", "venue": "ECCV 2024 (arXiv:2403.10517)", "url": "https://arxiv.org/abs/2403.10517", "track": "software", "type": "framework", "mech": "av_stream", "milestone": false, "summary": "记忆增强的多模态视频理解智能体，将长视频看作交互环境，迭代检索关键帧并更新结构化视觉认知记忆。", "problem": "长视频包含海量时序冗余，一次性全帧输入超出上下文且难以定位细粒度事件。", "mechanism": "LLM 评估当前信息充分度，按需调用片段定位与关键帧检索工具迭代补充观察。", "evidence": "以平均仅 8.4 帧的极低采样成本在 EgoSchema 等长视频基准上超越全帧基线。"}, {"id": "autowebglm-2024", "date": "2024.04", "year": 2024, "short": "AutoWebGLM", "title": "AutoWebGLM: Bootstrap And Reinforce A Large Language Model-based Web Navigating Agent", "org": "Tsinghua / Zhipu AI", "venue": "KDD 2024 (arXiv:2404.03648)", "url": "https://arxiv.org/abs/2404.03648", "track": "software", "type": "mechanism", "mech": "text_interface", "milestone": false, "summary": "提出网页 HTML 简化算法与课程强化学习，增强模型在结构化文本网页观察下的导航能力。", "problem": "原始网页 DOM 噪声多且缺乏开源双语网页操作训练数据。", "mechanism": "设计启发式 HTML 精简器保留交互属性，结合课程学习与拒绝采样微调。", "evidence": "在 Mind2Web 与 WebArena 上超越同规模开源模型及部分商用闭源模型。"}, {"id": "ferret-ui-2024", "date": "2024.04", "year": 2024, "short": "Ferret-UI", "title": "Ferret-UI: Grounded Mobile UI Understanding with Multimodal LLMs", "org": "Apple", "venue": "ECCV 2024 (arXiv:2404.05719)", "url": "https://arxiv.org/abs/2404.05719", "track": "software", "type": "mechanism", "mech": "representation", "milestone": false, "summary": "针对手机屏幕细长纵横比与微小图标特征，提出任意分辨率子图切分（Any-Resolution）与多粒度指代/定位训练。", "problem": "传统正方形视觉编码器直接拉伸或压缩手机截图会导致小图标严重失真。", "mechanism": "按屏幕原始纵横比切分网格子图并融合全局特征，构建基础与进阶 UI 指代定位任务。", "evidence": "在移动端图标识别、控件列举与空间指代定位任务上显著超越 GPT-4V。"}, {"id": "osworld-2024", "date": "2024.04", "year": 2024, "short": "OSWorld", "title": "OSWorld: Benchmarking Multimodal Agents for Open-Ended Tasks in Real Computer Environments", "org": "HKU / Salesforce / OSU", "venue": "NeurIPS 2024 (arXiv:2404.07972)", "url": "https://arxiv.org/abs/2404.07972", "track": "software", "type": "benchmark", "mech": "multi_step_loop", "milestone": true, "summary": "在真实 Ubuntu/Windows/macOS 虚拟机中构建 369 个跨应用、多步真实电脑任务，提供截图与无障碍树观察及基于最终系统状态的执行式验收。", "problem": "缺乏覆盖真实桌面操作系统、多软件协同与客观状态检查的综合智能体评测考场。", "mechanism": "可复现虚拟机环境 + 多模态观察接口 + 面向文件系统与软件状态的验收脚本。", "evidence": "初始基线暴露惊人鸿沟：人类完成率 72.36%，而当时最强模型（GPT-4）仅 12.24%。"}, {"id": "langnav-2024", "date": "2024.04", "year": 2024, "short": "LangNav", "title": "LangNav: Language as a Perceptual Representation for Navigation", "org": "Google Research", "venue": "Findings of NAACL 2024 (arXiv:2310.07889)", "url": "https://arxiv.org/abs/2310.07889", "track": "embodied", "type": "mechanism", "mech": "embodied_3d", "milestone": false, "summary": "探讨将三维室内视觉观察转化为纯自然语言描述表征以驱动具身视觉语言导航的感知解耦路线。", "problem": "验证纯语言表征作为视觉与决策之间中间桥梁的信息保留程度与局限。", "mechanism": "使用图像描述器把每步全景图转为结构化文本描述输入微调语言模型。", "evidence": "揭示文本描述在低样本导航中的优势及精细空间几何丢失瓶颈。"}, {"id": "chameleon-fb-2024", "date": "2024.05", "year": 2024, "short": "Chameleon (Early-Fusion)", "title": "Chameleon: Mixed-Modal Early-Fusion Foundation Models", "org": "Meta FAIR", "venue": "arXiv:2405.09818", "url": "https://arxiv.org/abs/2405.09818", "track": "cross", "type": "foundation", "mech": "representation", "milestone": false, "summary": "将图像离散 token 与文本 token 从底层起放入同一自回归 Transformer 流中做早期融合（Early-Fusion），探索原生统一多模态底座。", "problem": "传统晚期拼接（Late-Fusion）编码器难以在跨模态交错生成与深度推理中实现无损对齐。", "mechanism": "统一离散词表编码文本与图像 patch，端到端训练混合模态自回归模型。", "evidence": "为后续原生多模态早融合智能体架构奠定基础模型探索。"}, {"id": "gpt4o-2024", "date": "2024.05", "year": 2024, "short": "GPT-4o (Omni)", "title": "GPT-4o System Card", "org": "OpenAI", "venue": "OpenAI Release (2024.05)", "url": "https://openai.com/index/hello-gpt-4o/", "track": "cross", "type": "foundation", "mech": "av_stream", "milestone": true, "summary": "首个端到端统一文本、视觉与音频流的原生全模态旗舰基座，大幅降低多模态交互延迟并成为 2024–2025 绝大多数多模态智能体的默认核心引擎。", "problem": "此前语音与视觉需经 ASR/TTS 与独立编码器级联转译，延迟高达数秒且丢失语调与画面细节。", "mechanism": "单一神经网络端到端处理文本、图像与音频输入输出，实现毫秒级实时响应。", "evidence": "直接推动了实时流媒体智能体与高精度屏幕操控框架（如 OmniParser V2、Agent S2）的落地。"}, {"id": "androidworld-2024", "date": "2024.05", "year": 2024, "short": "AndroidWorld", "title": "AndroidWorld: A Dynamic Benchmarking Environment for Autonomous Agents", "org": "Google Research", "venue": "ICLR 2025 (arXiv:2405.14573)", "url": "https://arxiv.org/abs/2405.14573", "track": "software", "type": "benchmark", "mech": "multi_step_loop", "milestone": false, "summary": "在真实安卓模拟器中构建 116 个可动态随机生成参数的跨应用任务，通过读取系统底层状态做程序化结果验收，防止静态轨迹过拟合。", "problem": "固定参数的评测任务容易被记忆背诵，无法检验模型面对动态变化界面的真实感知泛化。", "mechanism": "任务参数动态实例化 + 多模态 M3A 基线对比（视觉与 a11y 树结合）。", "evidence": "成为评估移动端原生多步闭环智能体（如 UI-TARS）的核心动态基准。"}, {"id": "swe-agent-2024", "date": "2024.05", "year": 2024, "short": "SWE-agent (ACI)", "title": "SWE-agent: Agent-Computer Interfaces Enable Automated Software Engineering", "org": "Princeton", "venue": "NeurIPS 2024 (arXiv:2405.15793)", "url": "https://arxiv.org/abs/2405.15793", "track": "software", "type": "mechanism", "mech": "text_interface", "milestone": true, "summary": "提出专为大模型设计的智能体-计算机接口（ACI），通过带行号、上下省略提示及滚动跳转的 100 行文件查看器优化代码文本观察粒度。", "problem": "直接把数千行完整代码文件或原始 Linux Shell 塞给模型会导致注意力淹没与位置迷失。", "mechanism": "设计有限窗口文件查看器（100行窗口）与带语法检查的局部编辑反馈接口。", "evidence": "SWE-bench Lite 消融显示 100 行窗口解决率达 18.0%，显著高于 30 行（14.3%）与完整文件（12.7%）。"}, {"id": "videotree-2024", "date": "2024.05", "year": 2024, "short": "VideoTree", "title": "VideoTree: Adaptive Tree-based Video Representation for LLM Reasoning on Long Videos", "org": "ZJU / Salesforce", "venue": "CVPR 2025 (arXiv:2405.19209)", "url": "https://arxiv.org/abs/2405.19209", "track": "software", "type": "mechanism", "mech": "av_stream", "milestone": false, "summary": "针对长视频推理提出自适应树状视觉表征，依据查询相关性由粗到细动态提取关键视频片段。", "problem": "均匀抽帧在面对数十分钟长视频时极易漏掉关键瞬时事件或造成上下文冗余。", "mechanism": "基于聚类与查询相关性动态展开视频关键帧树结构，供 LLM 迭代推理。", "evidence": "在 EgoSchema 与 Video-MME 长视频基准上以极少帧数超越密集采样基线。"}, {"id": "mobile-agent-v2-2024", "date": "2024.06", "year": 2024, "short": "Mobile-Agent-v2", "title": "Mobile-Agent-v2: Mobile Device Operation Assistant with Effective Navigation via Multi-Agent Collaboration", "org": "Alibaba / BUPT", "venue": "NeurIPS 2024 (arXiv:2406.01014)", "url": "https://arxiv.org/abs/2406.01014", "track": "software", "type": "framework", "mech": "multi_step_loop", "milestone": false, "summary": "引入规划、决策与反思三智能体协同及视觉历史记忆聚焦机制，缓解长程移动端操作中的状态迷失问题。", "problem": "单智能体在长程跨应用手机任务中容易遗忘已完成的中间操作与屏幕上下文。", "mechanism": "增设专门的 Memory Agent 提炼历史屏幕操作焦点，Reflection Agent 校验动作后页面变化。", "evidence": "在多应用长程手机任务上的完成率比 v1 提升超过 30%。"}, {"id": "openvla-2024", "date": "2024.06", "year": 2024, "short": "OpenVLA", "title": "OpenVLA: An Open-Source Vision-Language-Action Model", "org": "Stanford / UC Berkeley", "venue": "CoRL 2024 (arXiv:2406.09246)", "url": "https://arxiv.org/abs/2406.09246", "track": "embodied", "type": "mechanism", "mech": "embodied_3d", "milestone": false, "summary": "基于 97 万条真实机器人操作示范训练 7B 开源视觉-语言-动作模型，融合双视觉编码器增强空间细节感知与开源可复现性。", "problem": "RT-2 等早期 VLA 模型闭源且参数庞大（55B），限制了具身感知与控制社区的迭代。", "mechanism": "结合 SigLIP 与 DINOv2 双视觉特征提取空间几何与语义，微调 Llama-2 输出动作 token。", "evidence": "在 29 项真机任务上以 1/7 参数量绝对成功率超越闭源 RT-2-X（55B）达 16.5%。"}, {"id": "robopoint-2024", "date": "2024.06", "year": 2024, "short": "RoboPoint", "title": "RoboPoint: A Vision-Language Model for Spatial Affordance Prediction for Robotics", "org": "UW / NVIDIA", "venue": "CoRL 2024 (arXiv:2406.10721)", "url": "https://arxiv.org/abs/2406.10721", "track": "embodied", "type": "mechanism", "mech": "spatial_grounding", "milestone": true, "summary": "物理世界版的 SeeClick：利用仿真自动生成空间关系数据微调 VLM，直接根据自然语言指令在图像上预测“从哪抓、往哪放”的空间可供性关键点。", "problem": "传统物体检测框无法表达“放在两个盘子中间的空位上”这类细粒度连续空间可供性。", "mechanism": "合成相对方位与自由区域点云投影监督数据，训练 VLM 直接输出精确 2D 关键点坐标。", "evidence": "在真实机械臂复杂空间放置与多视角操作中大幅超越通用 VLM 与检测管线。"}, {"id": "gui-world-2024", "date": "2024.06", "year": 2024, "short": "GUI-World", "title": "GUI-World: A Video Benchmark and Dataset for Multimodal GUI-oriented Understanding", "org": "USTC / HKU", "venue": "ICLR 2025 (arXiv:2406.10819)", "url": "https://arxiv.org/abs/2406.10819", "track": "software", "type": "benchmark", "mech": "av_stream", "milestone": false, "summary": "针对静态单帧截图无法捕捉界面动画、视频与多窗口动态切换的不足，构建面向多模态动态 GUI 理解的视频级数据集与基准。", "problem": "静态界面截图基准忽略了真实人机交互中的连续时间动态变化。", "mechanism": "采集覆盖桌面、网页、XR 与移动端的 1.2 万条动态界面交互视频序列。", "evidence": "揭示现有主流 VLM 在动态界面时序变化理解上的显著性能衰减。"}, {"id": "guicourse-2024", "date": "2024.06", "year": 2024, "short": "GUICourse", "title": "GUICourse: From General Vision Language Models to Versatile GUI Agents", "org": "Tsinghua", "venue": "ACL 2025 (arXiv:2406.11317)", "url": "https://arxiv.org/abs/2406.11317", "track": "software", "type": "mechanism", "mech": "spatial_grounding", "milestone": false, "summary": "设计分阶段 GUI OCR、接地与交互训练课程数据，系统将通用视觉语言模型转化为具备精细界面感知能力的 GUI 智能体。", "problem": "通用 VLM 缺乏从基础文字定位到多步界面状态转移的渐进式训练数据。", "mechanism": "构建 GUIEnv、GUIAct 与 GUIChat 三阶段数据底座微调开源 VLM。", "evidence": "显著提升开源 VLM 在网页与移动端定位及多步导航中的表现。"}, {"id": "timo-2024", "date": "2024.06", "year": 2024, "short": "Timo", "title": "Timo: Towards Better Temporal Reasoning for Language Models", "org": "Tsinghua", "venue": "arXiv:2406.14192", "url": "https://arxiv.org/abs/2406.14192", "track": "software", "type": "mechanism", "mech": "temporal_state", "milestone": false, "summary": "专门提升大语言模型对时间关系、时序跨度与动态事件演进逻辑的推理感知能力。", "problem": "通用大模型对时间戳推算与事件先后时序敏感度不足。", "mechanism": "利用数学与代码时间推理数据增强模型对时间维度的表征。", "evidence": "在多项时间推理与动态事件排序基准上显著改善时序准确性。"}, {"id": "agent-e-2024", "date": "2024.07", "year": 2024, "short": "Agent-E", "title": "Agent-E: From Autonomous Web Navigation to Foundational Design Principles in Agentic Systems", "org": "Emergence AI", "venue": "ACL 2025 (arXiv:2407.13032)", "url": "https://arxiv.org/abs/2407.13032", "track": "software", "type": "mechanism", "mech": "text_interface", "milestone": false, "summary": "在纯文本/DOM 网页智能体中提出按任务动态蒸馏去噪的灵活 DOM 表示，以及动作执行后的页面增量变化观察（Change Observation）机制。", "problem": "即使进入视觉时代，完整 DOM 树依然噪声巨大，且模型常不知晓上一步点击是否触发了局部变化。", "mechanism": "分层规划执行器分离 + 任务驱动 DOM 过滤 + 动作前后 DOM 差异摘要反馈。", "evidence": "在 WebVoyager 基准上以纯文本结构化观察取得 73.1% 惊人成功率，证明结构化感知的持续生命力。"}, {"id": "omniparser-v1-2024", "date": "2024.08", "year": 2024, "short": "OmniParser v1", "title": "OmniParser for Pure Vision Based GUI Agent", "org": "Microsoft Research", "venue": "arXiv:2408.00203", "url": "https://arxiv.org/abs/2408.00203", "track": "software", "type": "mechanism", "mech": "spatial_grounding", "milestone": true, "summary": "将任意屏幕截图解析为“可交互区域检测框 + OCR 文字 + 局部图标功能语义描述”的带编号结构化清单，充当通用大模型的专用视觉前端。", "problem": "通用大模型直接回归复杂界面坐标精度低，且无文本的纯图标按钮缺乏语义提示。", "mechanism": "微调可交互图标检测器 + 图标功能描述模型，输出带 ID 编号的结构化界面元素表。", "evidence": "配合 GPT-4V 在 SeeAssign 定位准确率从 0.705 跃升至 0.938，大幅提升纯视觉操作精度。"}, {"id": "transfusion-2024", "date": "2024.08", "year": 2024, "short": "Transfusion", "title": "Transfusion: Predict the Next Token and Diffuse Images with One Multi-Modal Model", "org": "Meta / Waymo", "venue": "ICLR 2025 (arXiv:2408.11039)", "url": "https://arxiv.org/abs/2408.11039", "track": "cross", "type": "foundation", "mech": "representation", "milestone": false, "summary": "在单一 Transformer 中对文本执行下一 token 预测、对连续图像 patch 执行扩散建模，统一多模态理解与生成目标。", "problem": "离散化图像损失高频视觉细节，需要连续图像表征与离散语言推理的统一架构。", "mechanism": "混合自回归与扩散训练目标，在共享参数空间处理连续视觉与离散文本。", "evidence": "为后续具身与视觉规划统一多模态基础模型提供架构范式。"}, {"id": "show-o-2024", "date": "2024.08", "year": 2024, "short": "Show-o", "title": "Show-o: One Single Transformer to Unify Multimodal Understanding and Generation", "org": "NUS / ByteDance", "venue": "ICLR 2025 (arXiv:2408.12528)", "url": "https://arxiv.org/abs/2408.12528", "track": "cross", "type": "foundation", "mech": "representation", "milestone": false, "summary": "用单一 Transformer 结合自回归与离散扩散统一多模态感知理解与视觉生成。", "problem": "多模态理解与未来视觉状态预测往往需要分离的两套模型。", "mechanism": "混合注意力机制同时支持自回归文本推理与并行图像生成。", "evidence": "推动统一多模态基础模型向兼顾环境理解与视觉想象演进。"}, {"id": "dcc-highres-2024", "date": "2024.08", "year": 2024, "short": "Divide, Conquer & Combine", "title": "Divide, Conquer and Combine: A Training-Free Framework for High-Resolution Image Perception in Multimodal LLMs", "org": "Shanghai AI Lab", "venue": "AAAI 2025 (arXiv:2408.15556)", "url": "https://arxiv.org/abs/2408.15556", "track": "software", "type": "mechanism", "mech": "active_zoom", "milestone": false, "summary": "提出免训练的高分辨率图像感知分治框架，将超高分图切块并行编码后再融合局部细节与全局上下文。", "problem": "通用 VLM 面临超高分辨率界面与图表时存在严重的细节压缩损失。", "mechanism": "免训练滑动切块局部识别 + 跨块语义聚合推理。", "evidence": "在无需重新训练模型参数的前提下显著提升高分屏细节识读率。"}, {"id": "qin-survey-2024", "date": "2024.09", "year": 2024, "short": "Large-Model AI Agents 综述 (Qin & Jin)", "title": "A Survey of Large-Model-Based AI Agents", "org": "Qin & Jin", "venue": "arXiv:2409.01357 (2024.09)", "url": "https://arxiv.org/abs/2409.01357", "track": "cross", "type": "survey", "mech": "representation", "milestone": false, "summary": "从系统组件视角综述基于大模型的 AI 智能体，系统讨论多模态环境感知接口、工具调用与决策记忆协同（用户下载库核验补充）。", "problem": "随着多模态大模型接入智能体，需要统一梳理感知与外部世界交互的范式演进。", "mechanism": "将多模态信号摄入、环境表征与反馈循环纳入智能体核心组件体系。", "evidence": "为跨场景理解智能体感知与行动闭环提供系统框架参考。"}, {"id": "waa-2024", "date": "2024.09", "year": 2024, "short": "Windows Agent Arena", "title": "Windows Agent Arena: Evaluating Multi-Modal OS Agents at Scale", "org": "Microsoft Research", "venue": "arXiv:2409.08264", "url": "https://arxiv.org/abs/2409.08264", "track": "software", "type": "benchmark", "mech": "multi_step_loop", "milestone": false, "summary": "在可并行扩展的 Windows 11 虚拟机环境上构建 154 个常见桌面应用真实任务，规模化评测多模态 OS 智能体。", "problem": "早期桌面评测集中于 Ubuntu 环境，缺乏覆盖主流 Windows 商业软件生态的并行评测基准。", "mechanism": "支持 Azure 云端并行容器化评测，提供截图与 Windows a11y 树多模态观察。", "evidence": "揭示多模态模型在 Windows 复杂办公与浏览器跨应用任务中的真实瓶颈。"}, {"id": "mobilevlm-2024", "date": "2024.09", "year": 2024, "short": "MobileVLM", "title": "MobileVLM: A Vision-Language Model for Better Intra- and Inter-UI Understanding", "org": "BUPT / Alibaba", "venue": "EMNLP 2024 Findings (arXiv:2409.14818)", "url": "https://arxiv.org/abs/2409.14818", "track": "software", "type": "mechanism", "mech": "representation", "milestone": false, "summary": "专为移动界面优化单页内控件空间关系与跨页面跳转转移理解的视觉语言模型。", "problem": "通用多模态模型缺乏对移动端页面间状态跳转逻辑的显式建模。", "mechanism": "构建单页元素关系与跨页操作转移双任务预训练目标。", "evidence": "在移动 UI 导航与元素理解基准上取得显著提升。"}, {"id": "uground-2024", "date": "2024.10", "year": 2024, "short": "UGround", "title": "Navigating the Digital World as Humans Do: Universal Visual Grounding for GUI Agents", "org": "Ohio State University", "venue": "ICLR 2025 (arXiv:2410.05243)", "url": "https://arxiv.org/abs/2410.05243", "track": "software", "type": "mechanism", "mech": "spatial_grounding", "milestone": true, "summary": "提出规划与接地分离的纯视觉框架 SeeAct-V，构建包含 130 万张截图、1,000 万个 UI 元素的合成指代数据，训练跨平台通用像素定位模型。", "problem": "以往网页与移动端接地模型数据规模受限，跨操作系统（桌面/Web/Mobile）泛化能力不足。", "mechanism": "利用网页渲染引擎与 MLLM 合成海量视觉、功能与相对位置指代样本训练纯视觉坐标映射。", "evidence": "在 ScreenSpot 与多平台离线/在线基准上大幅刷新纯视觉接地纪录，证明纯视觉足以替代 HTML。"}, {"id": "agent-s-2024", "date": "2024.10", "year": 2024, "short": "Agent S", "title": "Agent S: An Open Agentic Framework that Uses Computers Like a Human", "org": "Simular / UC Santa Cruz", "venue": "ICLR 2025 (arXiv:2410.08164)", "url": "https://arxiv.org/abs/2410.08164", "track": "software", "type": "framework", "mech": "multi_step_loop", "milestone": false, "summary": "构建结合多模态 ACI 观察接口、经验知识库与分层规划的开源电脑操作框架。", "problem": "长程电脑操作需要把局部视觉定位与跨任务操作经验记忆有机结合。", "mechanism": "多模态界面元素融合 + 外部网络检索经验增强分层规划。", "evidence": "在 OSWorld 与 Windows Agent Arena 真实电脑基准上取得开源框架领先成绩。"}, {"id": "ferret-ui2-2024", "date": "2024.10", "year": 2024, "short": "Ferret-UI 2", "title": "Ferret-UI 2: Mastering Universal User Interface Understanding Across Platforms", "org": "Apple", "venue": "ICLR 2025 (arXiv:2410.18967)", "url": "https://arxiv.org/abs/2410.18967", "track": "software", "type": "mechanism", "mech": "representation", "milestone": false, "summary": "将移动端细粒度指代与像素定位能力全面扩展至 iPhone、Android、iPad、Web 与桌面五大跨平台高分辨率界面。", "problem": "不同终端设备屏幕长宽比、控件密度与交互逻辑差异巨大，单一平台模型难以通用。", "mechanism": "动态高分辨率网格编码 + 跨平台统一多粒度指代与定位指令训练。", "evidence": "在 9 项跨平台 UI 理解与定位基准上全面超越同尺寸开源与闭源模型。"}, {"id": "videowebarena-2024", "date": "2024.10", "year": 2024, "short": "VideoWebArena", "title": "VideoWebArena: Evaluating Long Context Multimodal Agents with Video Understanding Web Tasks", "org": "CMU", "venue": "ICLR 2025 (arXiv:2410.19100)", "url": "https://arxiv.org/abs/2410.19100", "track": "software", "type": "benchmark", "mech": "av_stream", "milestone": false, "summary": "以长上下文视频理解形式评测多模态网页智能体跨视频流与网页交互的持续视觉观察能力。", "problem": "真实网络任务常需智能体先观看教学视频流提取步骤线索，再到网页上执行对应操作。", "mechanism": "构建长达数十分钟操作视频与交互网页沙盒相结合的跨模态基准。", "evidence": "暴露长上下文视频感知向多步网页行动转化时的显著信息衰减。"}, {"id": "os-atlas-2024", "date": "2024.10", "year": 2024, "short": "OS-ATLAS", "title": "OS-ATLAS: A Foundation Action Model for Generalist GUI Agents", "org": "Shanghai AI Lab / HKU / NJU", "venue": "ICLR 2025 (arXiv:2410.23218)", "url": "https://arxiv.org/abs/2410.23218", "track": "software", "type": "mechanism", "mech": "spatial_grounding", "milestone": false, "summary": "开源跨 Linux、Windows、macOS、Android 与 Web 五大平台的 1,300 万 UI 元素定位数据合成管线与统一动作空间基础模型。", "problem": "桌面操作系统（尤其是 Linux/macOS）极度缺乏大规模公开 UI 控件标注数据。", "mechanism": "自动化跨平台环境遍历采集 + 统一 0-1000 归一化坐标与动作原语微调。", "evidence": "在 ScreenSpot-Pro 与 OSWorld 等跨平台分布外（OOD）测试中展现出强劲零样本接地泛化。"}, {"id": "pi0-2024", "date": "2024.10", "year": 2024, "short": "π0 (Pi-Zero)", "title": "π0: A Vision-Language-Action Flow Model for General Robot Control", "org": "Physical Intelligence", "venue": "arXiv:2410.24164", "url": "https://arxiv.org/abs/2410.24164", "track": "embodied", "type": "mechanism", "mech": "embodied_3d", "milestone": false, "summary": "在预训练 VLM 上挂载基于流匹配（Flow Matching）的连续动作专家，将多视角视觉与本体感知映射为 50Hz 高频灵巧控制动作块。", "problem": "离散化 Action Token 频率低、精度粗糙，难以胜任折叠衣物、收拾餐桌等高频灵巧物理操作。", "mechanism": "VLM 语义主干 + 条件流匹配连续动作轨迹生成头。", "evidence": "在多种单臂/双臂真机平台上实现高难度长程灵巧物理操作。"}, {"id": "claude-cu-mcp-2024", "date": "2024.10", "year": 2024, "short": "Claude Computer Use & MCP", "title": "Claude 3.5 Sonnet Computer Use & Model Context Protocol (MCP)", "org": "Anthropic", "venue": "Anthropic Official Release (2024.10–11)", "url": "https://www.anthropic.com/news/3-5-models-and-computer-use", "track": "software", "type": "framework", "mech": "multi_step_loop", "milestone": true, "summary": "首次在前沿商业大模型中公测纯截图屏幕观察与键鼠操控能力，并同期推出 MCP 协议标准化外部数据源与工具状态接入。", "problem": "前沿大模型长期缺乏原生系统级屏幕操作与标准化的外部环境上下文连接协议。", "mechanism": "端到端像素坐标计数与连续截图反馈循环（Computer Use）+ 客户端-服务器标准化工具接口（MCP）。", "evidence": "推动整个产业界从对话式 Chatbot 全面转向桌面与云端托管执行智能体。"}, {"id": "showui-2024", "date": "2024.11", "year": 2024, "short": "ShowUI", "title": "ShowUI: One Vision-Language-Action Model for GUI Visual Agent", "org": "Show Lab / NUS", "venue": "CVPR 2025 (arXiv:2411.17465)", "url": "https://arxiv.org/abs/2411.17465", "track": "software", "type": "mechanism", "mech": "representation", "milestone": false, "summary": "提出基于 UI 连通图（UI-Guided）的冗余视觉 token 筛选机制，并构建交错视觉-语言-动作历史流，大幅加速高分屏训练与推理。", "problem": "高分辨率界面截图存在大量纯色背景与重复区块，导致视觉 token 序列冗长且计算低效。", "mechanism": "构图合并局部相似图像块以剪枝冗余 token + 交错历史截图序列建模。", "evidence": "训练速度提升 1.4 倍，在 ScreenSpot 与多步 GUI 导航上实现轻量高效 SOTA。"}, {"id": "os-agents-survey-2024", "date": "2024.11", "year": 2024, "short": "OS Agents 综述 (Hu et al.)", "title": "OS Agents: A Survey on MLLM-Based Agents for General Computing Devices Use", "org": "Hu 等 (Shanghai AI Lab / HKU)", "venue": "arXiv:2411.18279 (2024.11)", "url": "https://arxiv.org/abs/2411.18279", "track": "software", "type": "survey", "mech": "spatial_grounding", "milestone": false, "summary": "系统综述面向通用计算设备（桌面/手机/Web）的 MLLM 智能体，深入剖析截图 vs 结构化树观察表示、界面定位与交互评测体系（用户下载库核验）。", "problem": "跨操作系统 GUI 智能体发展迅猛，亟需从观察空间、动作空间与定位机制维度建立统一分类学。", "mechanism": "对比文本树、纯截图、混合多模态观察表征及各类 Grounding 训练范式。", "evidence": "成为研究操作系统级智能体感知与交互的核心领域综述。"}, {"id": "aguvis-2024", "date": "2024.12", "year": 2024, "short": "Aguvis", "title": "Aguvis: Unified Pure Vision Agents for Autonomous GUI Interaction", "org": "HKU / NUS / Salesforce", "venue": "ICML 2025 (arXiv:2412.04454)", "url": "https://arxiv.org/abs/2412.04454", "track": "software", "type": "framework", "mech": "multi_step_loop", "milestone": false, "summary": "构建纯视觉跨平台自主交互框架，通过两阶段训练与内心独白式显式推理将屏幕理解、定位与多步规划融为一体。", "problem": "闭源模型在定位精度上受限，而开源定位模型往往缺乏长程多步推理规划能力。", "mechanism": "第一阶段大规模纯视觉跨平台定位预训练，第二阶段引入显式内心独白规划微调。", "evidence": "在脱离闭源模型辅助的情况下刷新开源纯视觉 GUI 交互纪录。"}, {"id": "vsi-bench-2024", "date": "2024.12", "year": 2024, "short": "VSI-Bench (Thinking in Space)", "title": "Thinking in Space: How Multimodal Large Language Models See, Remember, and Recall Spaces", "org": "NYU", "venue": "CVPR 2025 (arXiv:2412.14171)", "url": "https://arxiv.org/abs/2412.14171", "track": "embodied", "type": "benchmark", "mech": "embodied_3d", "milestone": false, "summary": "构建包含 288 个真实室内场景第一视角视频与 5,000+ 问答的空间智能基准，评测连续视频流中的三维空间记忆与几何关系感知。", "problem": "多模态大模型从连续视频流中构建内部三维空间认知地图的能力缺乏系统量化。", "mechanism": "涵盖物体距离、方位、房间尺寸与出现顺序等多维度空间记忆推理题型。", "evidence": "揭示现有前沿 VLM 在连续视觉空间记忆与几何尺度判断上的明显短板。"}, {"id": "aria-ui-2024", "date": "2024.12", "year": 2024, "short": "Aria-UI", "title": "Aria-UI: Visual Grounding for GUI Instructions", "org": "HKU / Rhymes AI", "venue": "ACL 2025 (arXiv:2412.16256)", "url": "https://arxiv.org/abs/2412.16256", "track": "software", "type": "mechanism", "mech": "spatial_grounding", "milestone": false, "summary": "采用混合专家（MoE）视觉语言底座并融入文本或交错图像动作历史上下文，增强动态多步交互中的指令接地。", "problem": "单步静态定位忽略了前序操作历史对当前界面元素指代的上下文消歧作用。", "mechanism": "设计纯视觉合成指令数据管线 + 文本/图文交错历史上下文条件化坐标预测。", "evidence": "在 ScreenSpot 与多步动态界面基准上展现出极强的上下文感知定位精度。"}, {"id": "dispider-2025", "date": "2025.01", "year": 2025, "short": "Dispider", "title": "Dispider: Enabling Video LLMs with Active Real-Time Interaction via Disentangled Perception, Decision, and Reaction", "org": "Shanghai AI Lab / CUHK", "venue": "CVPR 2025 (arXiv:2501.03218)", "url": "https://arxiv.org/abs/2501.03218", "track": "software", "type": "mechanism", "mech": "av_stream", "milestone": true, "summary": "将连续视频流感知、主动交互触发决策与文本反应生成三者异步解耦，使视频大模型在流式观看过程中实现低延迟主动插话与回应。", "problem": "传统视频大模型只能等完整视频输入完毕后被动回答，无法在连续流媒体中实时感知并主动触发交互。", "mechanism": "轻量流式感知模块持续滑动窗口压缩特征并判断交互时机，触发异步重型 LLM 生成回复。", "evidence": "在实时流式视频交互基准上实现毫秒级响应与高精度主动触发。"}, {"id": "infiguiagent-2025", "date": "2025.01", "year": 2025, "short": "InfiGUIAgent", "title": "InfiGUIAgent: A Multimodal Generalist GUI Agent with Native Reasoning and Reflection", "org": "ZJU / Infi", "venue": "arXiv:2501.04575", "url": "https://arxiv.org/abs/2501.04575", "track": "software", "type": "framework", "mech": "multi_step_loop", "milestone": false, "summary": "两阶段训练原生推理与反思 GUI 智能体，引入 expectation-reflection 使模型根据动作后的新屏幕状态判断是否符合预期。", "problem": "缺乏对动作执行前后界面变化是否符合预期的显式对比反思机制。", "mechanism": "第一阶段强化界面理解与空间定位，第二阶段合成预期-反思推理轨迹进行微调。", "evidence": "在 OSWorld 与 AndroidWorld 上展现出稳健的动作后状态纠错能力。"}, {"id": "lifelong-agents-2025", "date": "2025.01", "year": 2025, "short": "Lifelong Learning Agents 综述", "title": "Lifelong Learning of LLM based Agents: A Roadmap", "org": "NUS / NTU", "venue": "arXiv:2501.07278", "url": "https://arxiv.org/abs/2501.07278", "track": "cross", "type": "survey", "mech": "temporal_state", "milestone": false, "summary": "系统综述智能体终身学习架构，专题剖析感知模块在跨环境演进中的鲁棒性与多模态接口自适应扩展需求。", "problem": "智能体在开放环境中长期运行时面临分布漂移与新模态接口持续接入挑战。", "mechanism": "从感知自适应、记忆巩固与世界模型演进三层梳理终身学习路线图。", "evidence": "为理解长周期运行智能体的感知演化提供系统理论参考。"}, {"id": "mobile-agent-e-2025", "date": "2025.01", "year": 2025, "short": "Mobile-Agent-E", "title": "Mobile-Agent-E: Self-Evolving Mobile Assistant for Complex Tasks", "org": "Alibaba / BUPT", "venue": "arXiv:2501.11733", "url": "https://arxiv.org/abs/2501.11733", "track": "software", "type": "framework", "mech": "multi_step_loop", "milestone": false, "summary": "面向复杂移动端长任务构建高层规划与低层视觉操作解耦、可从交互经验中沉淀动作快捷方式与技巧的自演化架构。", "problem": "长程跨应用手机任务步数多，重复界面探索与低层点击极易累积感知失误。", "mechanism": "Manager 高层拆解 + Worker 视觉操作 + 经验自演化模块提炼跨任务技巧。", "evidence": "在复杂长程移动端基准上相比前代实现大幅成功率跃升。"}, {"id": "ui-tars-v1-2025", "date": "2025.01", "year": 2025, "short": "UI-TARS (v1)", "title": "UI-TARS: Pioneering Automated GUI Interaction with Native Agents", "org": "ByteDance Seed", "venue": "arXiv:2501.12326", "url": "https://arxiv.org/abs/2501.12326", "track": "software", "type": "mechanism", "mech": "multi_step_loop", "milestone": true, "summary": "原生端到端 GUI 智能体：将细粒度屏幕元素理解、前后帧变化对比反思（判断上一步是否生效）与虚拟机在线轨迹自举整合于单一模型。", "problem": "拼接外部检测器与规划器的模块化系统存在误差累积，且缺乏对动作执行前后界面变化的对比判断。", "mechanism": "感知定位数据 + 跨平台统一动作 + System-2 反思推理 + 在线轨迹筛选/DPO 迭代飞轮。", "evidence": "在 OSWorld 15步纯截图设置达 22.7%（超越 Claude Computer Use 的 14.9%），50步达 24.6%。"}, {"id": "cua-survey-2025", "date": "2025.01", "year": 2025, "short": "Computer Use Agents 综述", "title": "A Comprehensive Survey of AI Agents for Computer Control", "org": "Sager et al.", "venue": "arXiv:2501.16150", "url": "https://arxiv.org/abs/2501.16150", "track": "software", "type": "survey", "mech": "multi_step_loop", "milestone": false, "summary": "系统梳理计算机操作智能体的视觉/结构化观察接口、延迟瓶颈、数据合成管线与评测基准。", "problem": "2024 年计算机操作工作集中爆发后，亟需横向比较不同观察模态与训练范式。", "mechanism": "对比截图、a11y tree 与混合接口在精度、速度与跨平台通用性上的权衡。", "evidence": "为理解 CUA 系统工程瓶颈提供全面综述参考。"}, {"id": "janus-pro-2025", "date": "2025.01", "year": 2025, "short": "Janus-Pro", "title": "Janus-Pro: Unified Multimodal Understanding and Generation with Data and Model Scaling", "org": "DeepSeek", "venue": "arXiv:2501.17811", "url": "https://arxiv.org/abs/2501.17811", "track": "cross", "type": "foundation", "mech": "representation", "milestone": false, "summary": "将视觉编码解耦为“理解”与“生成”两条独立通路并接入统一 Transformer，缓解统一多模态模型在细粒度感知与图像生成上的目标冲突。", "problem": "单一视觉 tokenizer 兼顾理解与生成会削弱细粒度界面与文字感知精度。", "mechanism": "解耦视觉编码器路径 + 优化训练策略与模型规模扩展。", "evidence": "在多模态感知理解基准上大幅超越前代统一模型。"}, {"id": "openai-operator-2025", "date": "2025.01", "year": 2025, "short": "OpenAI Operator (CUA)", "title": "Computer-Using Agent (CUA) & Operator", "org": "OpenAI", "venue": "OpenAI Release (2025.01.23)", "url": "https://openai.com/index/introducing-operator/", "track": "software", "type": "framework", "mech": "multi_step_loop", "milestone": false, "summary": "将 GPT-4o 视觉感知能力与强化学习多步推理结合成通用计算机操作模型 CUA，在云端独立浏览器中看截图、移光标、点击与输入。", "problem": "传统网页 API 集成无法覆盖未开放接口的广大商业网站与表单流程。", "mechanism": "端到端像素屏幕观察 + RL 驱动的多步规划、自我纠错与人类接管确认闭环。", "evidence": "在 WebArena 与 WebVoyager 等真实网页交互基准上刷新商业模型纪录。"}, {"id": "tremu-2025", "date": "2025.02", "year": 2025, "short": "TReMu", "title": "TReMu: Towards Neuro-Symbolic Temporal Reasoning for Multi-Session Agents", "org": "Ge et al.", "venue": "ACL 2025 (arXiv:2502.01630)", "url": "https://arxiv.org/abs/2502.01630", "track": "software", "type": "mechanism", "mech": "temporal_state", "milestone": false, "summary": "针对跨多轮会话的智能体记忆提出神经符号时间推理方法，改善历史事件时间排序与跨度感知。", "problem": "多会话长期交互中模型难以准确追踪不同事件发生的时间先后与有效窗口。", "mechanism": "结合时间记忆摘要与 Python 时间符号计算程序处理复杂时序查询。", "evidence": "显著提升长程对话与交互历史中的时间推理准确率。"}, {"id": "embodiedbench-2025", "date": "2025.02", "year": 2025, "short": "EmbodiedBench", "title": "EmbodiedBench: Comprehensive Benchmarking Multi-modal LLMs as Vision-Driven Embodied Agents", "org": "UIUC / Northwestern", "venue": "ICML 2025 (arXiv:2502.09560)", "url": "https://arxiv.org/abs/2502.09560", "track": "embodied", "type": "benchmark", "mech": "embodied_3d", "milestone": false, "summary": "全面评测多模态大语言模型作为纯视觉驱动具身智能体在观察、空间推理、常识规划与低层操作上的综合能力。", "problem": "缺乏统一比较各类前沿 VLM 在高低层具身视觉感知与闭环反思能力的标准化考场。", "mechanism": "构建覆盖 6 大具身环境的 1,128 个纯视觉驱动测试任务。", "evidence": "揭示现有模型在依赖视觉反馈的纠错与精细空间感知上的明显短板。"}, {"id": "magma-2025", "date": "2025.02", "year": 2025, "short": "Magma", "title": "Magma: A Foundation Model for Multimodal AI Agents", "org": "Microsoft Research", "venue": "CVPR 2025 (arXiv:2502.13130)", "url": "https://arxiv.org/abs/2502.13130", "track": "cross", "type": "foundation", "mech": "spatial_grounding", "milestone": true, "summary": "打通数字屏幕与物理机器人的跨界基础模型：利用 Set-of-Mark（空间定位）与 Trace-of-Mark（未来运动轨迹预测）在 UI、机器人与视频数据上联合预训练。", "problem": "数字界面点击与物理机械臂操作长期割裂，缺乏共享空间理解与时序动作预测的统一表征。", "mechanism": "将界面可操作点与视频中物体未来运动轨迹统一编码为视觉标记监督信号。", "evidence": "在 UI 导航与真机/仿真机器人操作基准上同时取得优异跨领域迁移效果。"}, {"id": "qwen25vl-2025", "date": "2025.02", "year": 2025, "short": "Qwen2.5-VL", "title": "Qwen2.5-VL Technical Report", "org": "Alibaba Qwen Team", "venue": "arXiv:2502.13923", "url": "https://arxiv.org/abs/2502.13923", "track": "cross", "type": "foundation", "mech": "representation", "milestone": false, "summary": "引入原生动态分辨率处理与绝对坐标/时间戳直接输出能力，成为 2025–2026 年众多开源 GUI 定位与强化学习主动感知工作的核心基座。", "problem": "固定分辨率缩放与归一化坐标映射限制了开源多模态模型在复杂高分屏和长视频中的感知精度。", "mechanism": "原生动态分辨率 ViT + 窗口注意力 + 统一空间坐标与时间定位监督。", "evidence": "直接支撑了 RegionFocus、GUI-Eyes、SE-GUI 等一系列前沿主动感知工作。"}, {"id": "omniparser-v2-2025", "date": "2025.02", "year": 2025, "short": "OmniParser V2", "title": "OmniParser V2: Turning Any LLM into a Computer Use Agent", "org": "Microsoft Research", "venue": "arXiv:2502.16161 (2025.02)", "url": "https://arxiv.org/abs/2502.16161", "track": "software", "type": "mechanism", "mech": "spatial_grounding", "milestone": false, "summary": "升级版纯视觉屏幕解析器，强化 8×8 像素级微小图标检测与结构化点位思考，大幅降低解析延迟并提升高分屏精度。", "problem": "初代 OmniParser 在高分辨率专业软件微小图标上漏检率较高且推理延迟偏大。", "mechanism": "更大规模图标检测与功能描述数据微调 + 结构化元素表推理优化。", "evidence": "配合 GPT-4o 在 ScreenSpot-Pro 上达到 39.6%，延迟相比 v1 降低约 60%。"}, {"id": "mobile-agent-v-2025", "date": "2025.02", "year": 2025, "short": "Mobile-Agent-V", "title": "Mobile-Agent-V: Learning Mobile Device Operation Assistance via Video-Guided Knowledge", "org": "Alibaba / BUPT", "venue": "arXiv:2502.17110", "url": "https://arxiv.org/abs/2502.17110", "track": "software", "type": "framework", "mech": "av_stream", "milestone": false, "summary": "引入连续操作视频引导知识注入，借助滑动窗口视频观察提炼界面交互知识以提升移动端跨步骤感知效率。", "problem": "单帧静态截图难以表达页面滑动过渡与连续动画反馈的因果关系。", "mechanism": "滑动窗口视频观察模块抽取动态操作演示知识并注入多步推理闭环。", "evidence": "在长程多步移动端应用任务中显著减少重复无效感知。"}, {"id": "aks-video-2025", "date": "2025.02", "year": 2025, "short": "Adaptive Keyframe Sampling", "title": "Adaptive Keyframe Sampling for Long Video Understanding", "org": "Tang et al.", "venue": "CVPR 2025 (arXiv:2502.21271)", "url": "https://arxiv.org/abs/2502.21271", "track": "software", "type": "mechanism", "mech": "av_stream", "milestone": false, "summary": "针对超长视频感知冗余，依据查询任务语义相关性动态自适应采样高信息密度关键帧。", "problem": "固定帧率均匀采样在超长视频中极易遗漏短暂关键画面或导致 token 过载。", "mechanism": "构建帧-查询相关性与覆盖度联合优化的目标函数筛选关键帧子集。", "evidence": "在 LongVideoBench 等长视频基准上显著提升帧利用效率与问答准确率。"}, {"id": "gemini-robotics-2025", "date": "2025.03", "year": 2025, "short": "Gemini Robotics / ER", "title": "Gemini Robotics: Bringing AI into the Physical World", "org": "Google DeepMind", "venue": "arXiv:2503.20020", "url": "https://arxiv.org/abs/2503.20020", "track": "embodied", "type": "framework", "mech": "embodied_3d", "milestone": false, "summary": "将原生多模态推理模型（Gemini 2.0）的时空感知与长程规划能力迁移至物理机器人，并拆分出专注空间定位与轨迹推理的 Robotics-ER 层。", "problem": "物理机器人需要兼顾高阶开放世界视觉推理与低延迟高频运动控制。", "mechanism": "Embodied Reasoning (ER) 负责 3D 空间指代、轨迹规划与故障检测，衔接底层动作策略。", "evidence": "在多形态双臂机器人上展示出极强的未见物体、环境干扰恢复与跨本体泛化。"}, {"id": "screenllm-2025", "date": "2025.03", "year": 2025, "short": "ScreenLLM", "title": "ScreenLLM: Stateful Screen Schema for Efficient Computer Use Agents", "org": "Jin et al.", "venue": "arXiv:2503.20978", "url": "https://arxiv.org/abs/2503.20978", "track": "software", "type": "mechanism", "mech": "multi_step_loop", "milestone": false, "summary": "提出有状态屏幕模式（Stateful Screen Schema）与关键帧增量压缩，高效表示连续桌面交互截图流以降低冗余。", "problem": "连续多步桌面操作中相邻截图高度相似，全量保留导致历史视觉上下文迅速爆炸。", "mechanism": "检测屏幕状态显著变化并生成结构化屏幕状态增量摘要。", "evidence": "大幅降低长程桌面任务的视觉 token 消耗与推理延迟。"}, {"id": "agent-s2-2025", "date": "2025.04", "year": 2025, "short": "Agent S2", "title": "Agent S2: A Compositional Generalist-Specialist Framework for Computer Use Agents", "org": "Simular / UC Santa Cruz", "venue": "arXiv:2504.00906", "url": "https://arxiv.org/abs/2504.00906", "track": "software", "type": "framework", "mech": "spatial_grounding", "milestone": false, "summary": "提出通用规划大模型与专用视觉定位专家协同的 Mixture-of-Grounding 组合式框架，动态路由不同专长的接地模型处理长程桌面任务。", "problem": "单一视觉模型难以同时精通高阶多步推理与各类专业软件的像素级精确点击。", "mechanism": "通用多模态大模型负责规划与状态评估，按界面类型路由专用接地模型输出坐标。", "evidence": "在 OSWorld、Windows Agent Arena 与 AndroidWorld 上全面刷新组合式框架纪录。"}, {"id": "kimivl-2025", "date": "2025.04", "year": 2025, "short": "Kimi-VL", "title": "Kimi-VL Technical Report", "org": "Moonshot AI", "venue": "arXiv:2504.07491", "url": "https://arxiv.org/abs/2504.07491", "track": "cross", "type": "foundation", "mech": "representation", "milestone": false, "summary": "采用原生分辨率 MoonViT 编码器与长上下文、长思维链强化学习训练，显著强化高分辨率屏幕理解与长视频感知推理。", "problem": "传统固定分辨率 ViT 切图在面对高密桌面截图与长视频时存在细节丢失与算力瓶颈。", "mechanism": "原生分辨率 MoonViT + MoE 语言主干 + 长 CoT 强化学习联合优化。", "evidence": "在 ScreenSpot-Pro、OSWorld 及长视频理解基准上以轻量激活参数超越众多大型模型。"}, {"id": "screenspot-pro-2025", "date": "2025.04", "year": 2025, "short": "ScreenSpot-Pro", "title": "ScreenSpot-Pro: GUI Grounding for Professional High-Resolution Computer Use", "org": "NUS / NTU", "venue": "COLM 2025 (arXiv:2504.07981)", "url": "https://arxiv.org/abs/2504.07981", "track": "software", "type": "benchmark", "mech": "spatial_grounding", "milestone": true, "summary": "针对 CAD、IDE、视频剪辑等专业高分辨率桌面软件（目标控件平均仅占屏幕面积 0.07%）构建定位基准，定量暴露全局缩图退化短板。", "problem": "早期 ScreenSpot 网页/手机按钮较大，掩盖了真实专业软件中密集极小控件的定位失败。", "mechanism": "采集 1,581 条高分屏专业软件指令，测试模型在极端尺度差异下的像素定位精度。", "evidence": "通用大模型与早期定位模型在该基准上准确率普遍跌至个位数至 30% 左右，直接催生主动缩放裁剪浪潮。"}, {"id": "gui-r1-2025", "date": "2025.04", "year": 2025, "short": "GUI-R1", "title": "GUI-R1: A Generalist R1-Style Vision-Language Action Model For GUI Agents", "org": "ZJU / HKUST", "venue": "arXiv:2504.10458", "url": "https://arxiv.org/abs/2504.10458", "track": "software", "type": "mechanism", "mech": "spatial_grounding", "milestone": false, "summary": "将 DeepSeek-R1 式基于可验证规则奖励的强化学习（GRPO）引入跨平台 GUI 视觉定位，激发模型在输出坐标前进行空间推理。", "problem": "大规模监督微调（SFT）容易过拟合固定界面模板，缺乏跨分辨率空间关系泛化推理。", "mechanism": "设计动作类型、点击坐标命中与格式规则奖励，使用少量高质量样本开展 RL 训练。", "evidence": "仅用约 3K 样本训练即在 ScreenSpot-Pro 与 OSWorld-G 上超越十倍数据量的 SFT 模型。"}, {"id": "infigui-r1-2025", "date": "2025.04", "year": 2025, "short": "InfiGUI-R1", "title": "InfiGUI-R1: Advancing Multimodal GUI Agents from Reactive Actors to Deliberative Reasoners", "org": "ZJU / Infi", "venue": "arXiv:2504.14239", "url": "https://arxiv.org/abs/2504.14239", "track": "software", "type": "mechanism", "mech": "spatial_grounding", "milestone": false, "summary": "通过空间推理蒸馏将 GUI 的视觉—空间位置关系显式纳入思维链，再用强化学习训练子目标规划与错误恢复。", "problem": "端到端反应式（Reactive）模型看到屏幕直接输出坐标，遇到复杂相对位置时缺乏审慎空间推理。", "mechanism": "两阶段：空间推理轨迹蒸馏冷启动 + 基于子目标与错误恢复奖励的强化学习。", "evidence": "在 ScreenSpot-Pro 上显著提升复杂空间指代指令的定位准确率。"}, {"id": "mr-video-2025", "date": "2025.04", "year": 2025, "short": "Mr. Video", "title": "Mr. Video: MapReduce-Style Agentic Long Video Understanding", "org": "Pang & Wang", "venue": "arXiv:2504.16082", "url": "https://arxiv.org/abs/2504.16082", "track": "software", "type": "framework", "mech": "av_stream", "milestone": false, "summary": "采用 MapReduce 分治范式对超长视频进行分段并行感知提取与层级信息聚合推理。", "problem": "长视频单窗口感知易受无关片段干扰且难以跨小时级时间跨度关联线索。", "mechanism": "Map 阶段分段并行提取事件观察摘要，Reduce 阶段按任务查询迭代聚合定位。", "evidence": "在多小时长视频问答任务上展现出优异的全局与局部线索整合能力。"}, {"id": "ragen-2025", "date": "2025.04", "year": 2025, "short": "RAGEN", "title": "RAGEN: Understanding Self-Evolution in LLM Agents via Multi-Turn Reinforcement Learning", "org": "Northwestern / UIUC", "venue": "arXiv:2504.20073", "url": "https://arxiv.org/abs/2504.20073", "track": "software", "type": "mechanism", "mech": "temporal_state", "milestone": false, "summary": "研究多轮交互环境下强化学习智能体基于环境观察反馈的自演化机制，揭示缺乏细粒度状态推理时的“回声陷阱”退化。", "problem": "直接对多轮交互轨迹做结果奖励 RL 易导致推理模板坍缩与忽视环境真实反馈。", "mechanism": "提出 StarPO 轨迹级策略优化框架，剖析状态反馈密度对多轮学习的决定性影响。", "evidence": "直接催生了后续显式引入状态估计与转移建模的 VAGEN 架构。"}, {"id": "regionfocus-2025", "date": "2025.05", "year": 2025, "short": "RegionFocus", "title": "RegionFocus: Visual Test-Time Scaling for GUI Grounding", "org": "Microsoft Research", "venue": "ICCV 2025 (arXiv:2505.00684)", "url": "https://arxiv.org/abs/2505.00684", "track": "software", "type": "mechanism", "mech": "active_zoom", "milestone": true, "summary": "提出免重训的测试时视觉聚焦缩放机制：在定位失败或不确定时动态裁剪局部区域放大重判，并在局部图叠加历史点击星标轨迹。", "problem": "面对 ScreenSpot-Pro 等高密专业界面，单次被动读全屏图必然丢失局部微小控件细节。", "mechanism": "由粗到细动态生成候选焦点区域边界框裁剪重编码，结合图像地图（image-as-map）避免重复搜索。", "evidence": "在 Qwen2.5-VL-72B 上将 ScreenSpot-Pro 推高至 61.6%，开启测试时主动局部看图范式。"}, {"id": "visual-planning-2025", "date": "2025.05", "year": 2025, "short": "Visual Planning", "title": "Visual Planning: Let's Think Only with Images", "org": "Xu et al.", "venue": "arXiv:2505.11409", "url": "https://arxiv.org/abs/2505.11409", "track": "embodied", "type": "mechanism", "mech": "active_zoom", "milestone": false, "summary": "探索完全在连续图像空间而非纯文字转译中进行多步空间推演与路径规划的纯视觉推理范式。", "problem": "空间迷宫与复杂几何操作强制译成文本思维链会导致严重的空间拓扑信息丢失。", "mechanism": "在隐空间与生成视觉帧序列中直接推演环境状态演变与下一步位置。", "evidence": "在空间导航与视觉谜题任务上大幅超越纯文本 CoT 推理基线。"}, {"id": "se-gui-2025", "date": "2025.05", "year": 2025, "short": "SE-GUI", "title": "Enhancing Visual Grounding for GUI Agents via Self-Evolutionary Reinforcement Learning", "org": "Shanghai AI Lab", "venue": "arXiv:2505.12370", "url": "https://arxiv.org/abs/2505.12370", "track": "software", "type": "mechanism", "mech": "spatial_grounding", "milestone": false, "summary": "提出自演化强化学习（SE-GUI），利用注意力图提取与连续高斯空间奖励信号强化复杂高分屏中的细粒度视觉定位。", "problem": "二值化的“点中/点偏”奖励在目标极小时信号过于稀疏，强化学习难以收敛。", "mechanism": "结合连续高斯距离奖励与注意力区域筛选高价值样本开展自演化迭代训练。", "evidence": "在 ScreenSpot-Pro 上以 7B 参数量取得当时开源模型领先的 47.3% 定位准确率。"}, {"id": "osworld-g-2025", "date": "2025.05", "year": 2025, "short": "OSWorld-G (Jedi)", "title": "Scaling Computer-Use Grounding via User Interface Decomposition and Synthesis", "org": "HKU / Salesforce", "venue": "arXiv:2505.13227", "url": "https://arxiv.org/abs/2505.13227", "track": "software", "type": "benchmark", "mech": "spatial_grounding", "milestone": false, "summary": "构建将 GUI 定位细分为文本匹配、元素识别、布局理解与精细操作的 OSWorld-G 基准，并开源 400 万条合成定位数据 Jedi。", "problem": "需要诊断究竟是哪一类界面视觉理解（图标语义 vs 相对布局 vs 像素精细度）制约了 OSWorld 表现。", "mechanism": "解耦图标、布局与文本合成管线 + 细粒度定位能力诊断基准。", "evidence": "训练后的模型使基础组件在 OSWorld 上的任务完成率从 5% 大幅提升至 27%。"}, {"id": "deepeyes-2025", "date": "2025.05", "year": 2025, "short": "DeepEyes", "title": "DeepEyes: Incentivizing 'Thinking with Images' via Reinforcement Learning", "org": "ByteDance / HKU", "venue": "NeurIPS 2025 (arXiv:2505.14362)", "url": "https://arxiv.org/abs/2505.14362", "track": "software", "type": "mechanism", "mech": "active_zoom", "milestone": true, "summary": "通过端到端强化学习激励多模态大模型在推理过程中自主决定何时调用局部裁剪工具，实现由粗到细的“以图思考（Thinking with Images）”。", "problem": "传统多模态推理把图像当作固定不变的初始输入，无法在思考过程中主动放大检视可疑局部区域。", "mechanism": "在长思维链中交错插入图像裁剪工具调用动作，将返回的高清局部图融入后续推理。", "evidence": "在高分辨率细粒度视觉感知与图表/界面定位任务上无需人工轨迹监督即可涌现主动裁剪行为。"}, {"id": "gui-g1-2025", "date": "2025.05", "year": 2025, "short": "GUI-G1", "title": "GUI-G1: Understanding R1-Zero-Like Training for Visual Grounding in GUI Agents", "org": "Zhou et al.", "venue": "arXiv:2505.15810", "url": "https://arxiv.org/abs/2505.15810", "track": "software", "type": "mechanism", "mech": "spatial_grounding", "milestone": false, "summary": "深入剖析 R1-Zero 式规则强化学习在无需复杂思维链冷启动下激发 GUI 界面坐标精准定位的奖励设计机制。", "problem": "探究“快速直觉坐标输出”与“长思维链空间推理”在界面定位训练中的真实收益差异。", "mechanism": "对比极简格式奖励 + 边界框尺寸自适应距离奖励对定位泛化的影响。", "evidence": "证明针对定位任务定制的简洁 RL 奖励即可在 ScreenSpot-Pro 上超越冗长推理模板。"}, {"id": "videodeepresearch-2025", "date": "2025.06", "year": 2025, "short": "VideoDeepResearch", "title": "VideoDeepResearch: Long Video Understanding With Agentic Tool Using", "org": "Yuan et al.", "venue": "arXiv:2506.10821", "url": "https://arxiv.org/abs/2506.10821", "track": "software", "type": "framework", "mech": "av_stream", "milestone": false, "summary": "让智能体在超长视频中像深度检索一样自主多轮调用看帧与时间定位工具按需提取证据。", "problem": "长视频理解面临视觉信息过载，需要由推理驱动的主动片段检索闭环。", "mechanism": "设计多轮迭代检索工具集，使模型根据中间发现不断缩小时间窗口验证细节。", "evidence": "在长视频推理基准上以极少读取帧数显著超越全帧上下文基线。"}, {"id": "embodied-web-agents-2025", "date": "2025.06", "year": 2025, "short": "Embodied Web Agents", "title": "Embodied Web Agents: Bridging Physical-Digital Realms for Integrated Agent Intelligence", "org": "Yale / Stanford", "venue": "arXiv:2506.15677", "url": "https://arxiv.org/abs/2506.15677", "track": "cross", "type": "benchmark", "mech": "embodied_3d", "milestone": true, "summary": "将 3D 具身物理环境与真实功能网页连入同一任务链（如先在真实场景识别地标/食材，再到网页检索/下单），测试物理与数字感知的连续切换。", "problem": "既往研究将物理具身感知与网页数字感知完全割裂，无法评估现实生活跨界助手。", "mechanism": "构建跨 3D 室内/室外仿真与真实交互网页的双域联合环境与评测基准。", "evidence": "揭示现有模型在物理视觉线索向数字查询状态转换时存在显著上下文丢失。"}, {"id": "osworld-human-2025", "date": "2025.06", "year": 2025, "short": "OSWorld-Human", "title": "OSWorld-Human: Benchmarking the Efficiency of Computer-Use Agents", "org": "UCSD", "venue": "MLSys 2026 (arXiv:2506.16042)", "url": "https://arxiv.org/abs/2506.16042", "track": "software", "type": "benchmark", "mech": "temporal_state", "milestone": false, "summary": "人工标注 OSWorld 全部任务的最优人类操作轨迹，首次从“步数与时间效率”而非单纯成功率审视电脑智能体的感知与状态确认效率。", "problem": "智能体即使最终完成任务，也常因反复无效试探和状态确认而消耗极高时间与 token 成本。", "mechanism": "对比 16 个主流智能体与人类轨迹的步骤冗余度与单步推理延迟。", "evidence": "发现即便最强智能体仍比人类多走 2.7–4.3 倍步数，且长历史下的后置步骤耗时可达开局 3 倍。"}, {"id": "temporal-cot-2025", "date": "2025.07", "year": 2025, "short": "Temporal CoT", "title": "Temporal Chain of Thought: Long-Video Understanding by Thinking in Frames", "org": "Google Research", "venue": "NeurIPS 2025 (arXiv:2507.02001)", "url": "https://arxiv.org/abs/2507.02001", "track": "software", "type": "mechanism", "mech": "av_stream", "milestone": false, "summary": "让视频大模型像翻书一样以迭代采样关键帧作为中间推理步骤，自主定位最相关的时间片段再作答，避免长上下文视觉淹没。", "problem": "将数百帧视频一次性塞入超长上下文会导致关键瞬间信息被海量冗余帧稀释。", "mechanism": "粗粒度全局浏览 → 推理生成下一轮关注时间戳 → 局部高密采样验证。", "evidence": "仅用 32K 上下文窗口便在长视频理解基准上反超 700K 上下文标准推理 2.8 分。"}, {"id": "gemini25-2025", "date": "2025.07", "year": 2025, "short": "Gemini 2.5 Pro", "title": "Gemini 2.5: Pushing the Frontier with Advanced Reasoning, Multimodality, Long Context, and Next Generation Agentic Capabilities", "org": "Google DeepMind", "venue": "arXiv:2507.06261", "url": "https://arxiv.org/abs/2507.06261", "track": "cross", "type": "foundation", "mech": "multi_step_loop", "milestone": false, "summary": "将原生多模态理解、百万级长上下文与原生深度思考（Thinking）整合于统一旗舰底座，大幅提升长程屏幕交互与视频流感知精度。", "problem": "多步复杂环境交互需要模型在长历史多模态上下文中进行深度因果推理。", "mechanism": "原生多模态混合推理架构 + 长程视觉-动作轨迹上下文保持。", "evidence": "成为 2025–2026 年众多 CUA 与长视频主动感知基准的核心闭源对照基线。"}, {"id": "coact1-2025", "date": "2025.08", "year": 2025, "short": "CoAct-1", "title": "CoAct-1: Computer-using Agents with Coding as Actions", "org": "UIUC / Salesforce", "venue": "arXiv:2508.03923", "url": "https://arxiv.org/abs/2508.03923", "track": "software", "type": "framework", "mech": "text_interface", "milestone": false, "summary": "将可执行 Python/Bash 代码接口与纯视觉 GUI 鼠标键盘操作动态混合，让智能体根据环境结构化程度自主切换观察与执行通道。", "problem": "纯视觉鼠标点击在处理批量文件、表格公式与系统配置时效率远低于直接代码接口。", "mechanism": "协调器动态分配任务：结构化环境走代码终端观察执行，图形界面走纯视觉 GUI 操作。", "evidence": "在 OSWorld 上突破 60% 大关，证明“代码接口 + 视觉 GUI”混合感知的巨大威力。"}, {"id": "opencua-2025", "date": "2025.08", "year": 2025, "short": "OpenCUA", "title": "OpenCUA: Open Foundations for Computer-Use Agents", "org": "HKU / XLANG Lab", "venue": "arXiv:2508.09123", "url": "https://arxiv.org/abs/2508.09123", "track": "software", "type": "framework", "mech": "multi_step_loop", "milestone": false, "summary": "开源跨平台计算机使用智能体的数据标注基础设施（AgentNet）、状态-动作观察表征与基础模型体系。", "problem": "闭源商业 CUA 缺乏公开可复现的多操作系统长程观察-推理-动作训练管线。", "mechanism": "构建覆盖 Windows/macOS/Ubuntu 的大规模人类演示与反思增强训练数据。", "evidence": "开源 7B/32B 模型在 OSWorld-Verified 上显著超越同期开源基线。"}, {"id": "mobile-agent-v3-2025", "date": "2025.08", "year": 2025, "short": "Mobile-Agent-v3", "title": "Mobile-Agent-v3: Foundamental Agents for GUI Automation", "org": "Alibaba Tongyi Lab", "venue": "arXiv:2508.15144", "url": "https://arxiv.org/abs/2508.15144", "track": "software", "type": "framework", "mech": "multi_step_loop", "milestone": false, "summary": "推出跨桌面与移动端原生基座模型 GUI-Owl 与轨迹感知相对策略优化（TRPO），将感知理解与通用自动化工作流统一。", "problem": "模块化拼接架构难以跨桌面与移动双端实现高鲁棒性的端到端闭环进化。", "mechanism": "构建跨平台统一多模态底座 GUI-Owl + 结合动态记忆与反思的多智能体框架。", "evidence": "在 OSWorld 上取得 34.9 分，AndroidWorld 上取得 73.3 分的当时开源领先成绩。"}, {"id": "agentic-frameworks-survey-2025", "date": "2025.08", "year": 2025, "short": "Agentic AI Frameworks 综述", "title": "Agentic AI Frameworks: Architectures, Protocols, and Design Challenges", "org": "arXiv:2508.17692", "venue": "arXiv:2508.17692 (2025.08)", "url": "https://arxiv.org/abs/2508.17692", "track": "cross", "type": "survey", "mech": "multi_step_loop", "milestone": false, "summary": "系统分类比较大模型智能体架构在动态真实场景中的感知接口协议（如 MCP/A2A）、推理反思与评估策略。", "problem": "随着工具与环境协议标准化，需要从系统工程架构角度梳理感知与执行解耦边界。", "mechanism": "对比不同智能体通信与环境上下文接入协议的延迟与状态一致性。", "evidence": "为理解 2025 年工程化智能体接口演进提供系统参考。"}, {"id": "ui-tars-2-2025", "date": "2025.09", "year": 2025, "short": "UI-TARS-2", "title": "UI-TARS-2: Advancing GUI Agents with Multi-Turn Reinforcement Learning", "org": "ByteDance Seed", "venue": "arXiv:2509.02544", "url": "https://arxiv.org/abs/2509.02544", "track": "software", "type": "mechanism", "mech": "multi_step_loop", "milestone": true, "summary": "通过数据飞轮与稳定的多轮端到端强化学习训练原生 GUI 智能体，将长程屏幕观察历史、动作执行与环境状态反馈统一优化。", "problem": "单步 SFT 与离线 DPO 难以解决长程在线交互中的多步状态累积误差与探索瓶颈。", "mechanism": "大规模并行沙盒多轮 RL 训练 + 统一混合环境动作空间（GUI + 终端 + 浏览器）。", "evidence": "将 OSWorld 整任务成功率从初版的 24.6% 大幅跃升至 47.5%，Online-Mind2Web 达 88.2%。"}, {"id": "memgui-bench-2025", "date": "2025.09", "year": 2025, "short": "MemGUI-Bench", "title": "MemGUI-Bench: Benchmarking Memory of GUI Agents in Long-Horizon Interactions", "org": "Park et al.", "venue": "arXiv:2509.12233", "url": "https://arxiv.org/abs/2509.12233", "track": "software", "type": "benchmark", "mech": "temporal_state", "milestone": false, "summary": "专门基准评测 GUI 智能体在长交互跨步历史中保持视觉观察记忆、跨页面信息关联与状态检索的能力。", "problem": "长程操作常需智能体记住数步前在另一页面看到的验证码、价格或列表状态。", "mechanism": "设计强依赖跨步历史视觉观察记忆的移动端与桌面端多步任务基准。", "evidence": "揭示纯依赖滑动窗口最近几帧截图的策略在跨页面信息检索任务上的严重退化。"}, {"id": "agentic-mllm-survey-2025", "date": "2025.10", "year": 2025, "short": "Agentic MLLMs 综述 (Yao et al.)", "title": "A Survey on Agentic Multimodal Large Language Models", "org": "Yao 等", "venue": "Artificial Intelligence 2026 (arXiv:2510.10991)", "url": "https://arxiv.org/abs/2510.10991", "track": "cross", "type": "survey", "mech": "active_zoom", "milestone": true, "summary": "全面综述智能体化多模态大模型，提出正交分类轴解耦系统架构范式、主动感知与状态追踪核心能力及下游任务域（用户下载库核验）。", "problem": "多模态智能体横跨 GUI、机器人与长视频，亟需避免维度交叉的正交分类体系。", "mechanism": "解耦单体编排与模块化感知前端，系统分析感知预算分配与部分可观测性。", "evidence": "为理解主动多模态感知提供了系统理论坐标系。"}, {"id": "vagen-2025", "date": "2025.10", "year": 2025, "short": "VAGEN", "title": "VAGEN: Reinforcing World Model Reasoning for Multi-Turn VLM Agents", "org": "Northwestern / UIUC", "venue": "NeurIPS 2025 (arXiv:2510.16907)", "url": "https://arxiv.org/abs/2510.16907", "track": "software", "type": "mechanism", "mech": "temporal_state", "milestone": true, "summary": "针对部分可观测多轮视觉任务（POMDP），在强化学习中显式引入“状态估计（State Estimation）”与“转移建模（Transition Modeling）”两项内部世界模型推理。", "problem": "当前单帧画面往往不包含环境完整状态，直接端到端输出动作会导致智能体在部分可观测环境下迷失。", "mechanism": "结构化输出内部状态信念估计与动作后果预测，配合 WorldModeling Reward 与双层 GAE 优化。", "evidence": "在 Sokoban、Navigation 等五类多轮视觉交互任务上将 3B 模型综合得分从 0.21 提升至 0.82。"}, {"id": "tictoc-2025", "date": "2025.10", "year": 2025, "short": "TicToc", "title": "Your LLM Agents are Temporally Blind: The Misalignment Between Tool-Use Decisions and Human Time Perception", "org": "UCSD", "venue": "ACL 2026 Findings (arXiv:2510.23853)", "url": "https://arxiv.org/abs/2510.23853", "track": "software", "type": "benchmark", "mech": "temporal_state", "milestone": true, "summary": "系统量化揭示智能体“时间盲区”：模型无法感知对话轮次间流逝的真实时间，导致过度依赖已过期工具结果或重复查询静态事实。", "problem": "智能体在多轮交互中缺乏对外部世界动态时效性的感知（如数小时前的海浪天气查询已失效）。", "mechanism": "构建跨 76 个时间敏感度情景的 1,800+ 带 ISO 时间戳轨迹基准，评测工具重调用决策对齐度。", "evidence": "即使显式提供时间戳，测试的所有前沿模型与人类时间判断的归一化对齐率均未超过 65%。"}, {"id": "proagent-2025", "date": "2025.12", "year": 2025, "short": "ProAgent", "title": "ProAgent: Harnessing On-Demand Sensory Contexts for Proactive LLM Agent Systems in the Wild", "org": "CUHK / Columbia", "venue": "arXiv:2512.06721", "url": "https://arxiv.org/abs/2512.06721", "track": "cross", "type": "mechanism", "mech": "active_zoom", "milestone": false, "summary": "面向 AR 眼镜与移动穿戴设备提出按需分层主动感知：平时仅运行低功耗传感器监听，仅在上下文需要时按需唤醒高能耗相机视觉模型。", "problem": "端侧可穿戴智能体若全天候开启高帧率视觉识别，算力与电池功耗完全不可承受。", "mechanism": "低成本环境线索持续门控 + 按需启用视觉大模型 + 用户画像主动服务触发。", "evidence": "在真实野外穿戴场景中将主动意图预测准确率最高提升 27.7%，同时大幅降低端侧能耗。"}, {"id": "omniagent-2025", "date": "2025.12", "year": 2025, "short": "OmniAgent", "title": "OmniAgent: Audio-Guided Active Perception Agent for Omnimodal Video Understanding", "org": "Alibaba Qwen Team", "venue": "arXiv:2512.23646", "url": "https://arxiv.org/abs/2512.23646", "track": "software", "type": "mechanism", "mech": "av_stream", "milestone": true, "summary": "将主动感知扩展至音视频全模态流：智能体在 Think-Act-Observe-Reflect 循环中自主判断应依赖“听（音频定位）”还是“看（高密抽帧）”按需提取线索。", "problem": "长视频全帧多模态编码 token 爆炸，而纯靠单一模态抽帧极易漏掉对话或关键声音事件。", "mechanism": "音频引导时间定位工具（TELO）+ 细粒度视觉检视工具动态编排（洞见后内化进 Qwen3.8-Omni）。", "evidence": "在多项长音视频理解基准上以极少采样帧显著超越静态全帧基线。"}, {"id": "gui-eyes-2026", "date": "2026.01", "year": 2026, "short": "GUI-Eyes", "title": "GUI-Eyes: Tool-Augmented Perception for Visual Grounding in GUI Agents", "org": "Shanghai AI Lab / USTC", "venue": "AAAI 2026 (arXiv:2601.09770)", "url": "https://arxiv.org/abs/2601.09770", "track": "software", "type": "mechanism", "mech": "active_zoom", "milestone": true, "summary": "提出两阶段渐进式强化学习主动视觉感知：模型先看全图判断能否看清，自主决策是否及如何调用 Crop/Zoom 工具获取局部高清图后再精确定位。", "problem": "固定比例裁剪或一律全图高分输入缺乏自适应性，简单目标浪费算力、密集目标仍看不清。", "mechanism": "GRPO 端到端优化两阶段轨迹，设计结合目标接近度与区域重叠度的连续空间工具奖励。", "evidence": "仅用 3k 标注样本训练的 3B 模型在 ScreenSpot-Pro 达 44.8%，比固定裁剪提升 4.6 个百分点。"}, {"id": "from-perception-to-action-2026", "date": "2026.01", "year": 2026, "short": "From Perception to Action 综述", "title": "From Perception to Action: A Survey of Grounded Reasoning for Multimodal Agents", "org": "HKUST(GZ) Data Science & Analytics Thrust", "venue": "Survey (2026)", "url": "https://scholar.google.com/scholar?q=From+Perception+to+Action+A+Survey+of+Grounded+Reasoning+for+Multimodal+Agents", "track": "cross", "type": "survey", "mech": "spatial_grounding", "milestone": false, "summary": "围绕多模态智能体从“感知表征”向“接地推理与动作执行”转化的完整链条开展综述，剖析跨模态空间对齐与交互闭环挑战（用户下载库核验补充）。", "problem": "多模态智能体在将原始感官感知转化为可靠可执行动作间仍存在接地鸿沟。", "mechanism": "梳理视觉接地、空间推理与闭环反馈控制之间的耦合机制。", "evidence": "直接对应本报告“从环境观察到持续交互”的核心叙事脉络。"}, {"id": "efm10-bap-2026", "date": "2026.02", "year": 2026, "short": "EFM-10 / BAP", "title": "EFM-10 / BAP: Benchmarking Embodied Active Perception in Bimanual Manipulation", "org": "Embodied Active Perception Team", "venue": "ICRA 2026 (arXiv:2602.01939)", "url": "https://arxiv.org/abs/2602.01939", "track": "embodied", "type": "benchmark", "mech": "active_zoom", "milestone": true, "summary": "以“信息缺失”为严格口径定义具身操作中的主动感知任务与 10 个真机基准，让双臂机器人将非操作臂作为主动移动相机消除遮挡、补充精细观察。", "problem": "固定第三人称相机在精细操作（如插 USB 灯、挂杯子）时极易被机械臂自身或物体遮挡。", "mechanism": "构建 1,850 条真机主动视角调整示范，评测双臂协同消遮挡与信息获取策略。", "evidence": "量化证明主动移动视角相比固定视角在遮挡操作任务上的决定性优势。"}, {"id": "intentcua-2026", "date": "2026.02", "year": 2026, "short": "IntentCUA", "title": "IntentCUA: Learning Intent-level Representations for Skill Abstraction and Multi-Agent Planning in Computer-Use Agents", "org": "CUA Research Group", "venue": "arXiv:2602.17049", "url": "https://arxiv.org/abs/2602.17049", "track": "software", "type": "framework", "mech": "multi_step_loop", "milestone": false, "summary": "将原始多步界面交互观察轨迹抽象为多视角意图表示与可复用技能记忆，减少长程电脑任务中的重复无效重观察与意图漂移。", "problem": "长程电脑任务中频繁依赖原始全屏截图做底层推理会导致高步数开销与状态迷失。", "mechanism": "多视角轨迹意图抽象 + Planner/Optimizer/Critic 共享技能状态库。", "evidence": "在桌面长程工作流上取得 74.83% 任务成功率与 0.91 的高步数效率比。"}, {"id": "time-variant-av-2026", "date": "2026.03", "year": 2026, "short": "Time-Variant Audio-Visual Env", "title": "Escaping Time-Variant Audio-Visual Environments via Active Multimodal Exploration", "org": "Embodied AV Lab", "venue": "arXiv:2603.15467", "url": "https://arxiv.org/abs/2603.15467", "track": "embodied", "type": "benchmark", "mech": "av_stream", "milestone": false, "summary": "构建融合空间音频线索与限时消失视觉证据的具身逃脱环境，评测时敏跨模态主动探索与防音画干扰能力。", "problem": "现实环境中声音提示转瞬即逝且常伴随视觉干扰，需要声画协同主动寻源。", "mechanism": "时空动态视听仿真环境 + 跨模态线索关联与抗干扰主动探索评测。", "evidence": "量化揭示多模态智能体在时变音画环境中的线索遗漏与抗干扰短板。"}, {"id": "medspot-2026", "date": "2026.03", "year": 2026, "short": "MedSPOT", "title": "MedSPOT: A Workflow-Aware Sequential Grounding Benchmark for Clinical GUI", "org": "Medical AI Lab", "venue": "arXiv:2603.19993", "url": "https://arxiv.org/abs/2603.19993", "track": "software", "type": "benchmark", "mech": "spatial_grounding", "milestone": false, "summary": "构建包含 216 段真实临床软件操作视频与 597 个关键帧的序贯工作流定位基准，采用“首次点错即终止”严苛协议度量多步视觉定位误差传播。", "problem": "单步独立截图定位准确率高不代表在专业高风险工作流中能连续多步零失误。", "mechanism": "工作流上下文感知序贯 grounding 评测 + 级联错误传播度量。", "evidence": "揭示专业垂直领域多步连续界面感知中的严峻误差累积瓶颈。"}, {"id": "ego2web-2026", "date": "2026.03", "year": 2026, "short": "Ego2Web", "title": "Ego2Web: A Web Agent Benchmark Grounded in Egocentric Videos", "org": "Multimodal Embodied Lab", "venue": "arXiv:2603.22529", "url": "https://arxiv.org/abs/2603.22529", "track": "cross", "type": "benchmark", "mech": "embodied_3d", "milestone": true, "summary": "连接第一人称真实物理世界视频流与网页操作任务：智能体需先从用户第一视角视频中识别物体或生活情境，再自动执行网页检索与购买等数字行动。", "problem": "现实生活助理需要将用户眼前的物理世界视觉事件直接转化为数字软件界面的执行意图。", "mechanism": "Egocentric 物理视频事件提取 + 跨域状态接地 + 真实网页动作执行评测。", "evidence": "构建物理视觉感知向数字行动跨域转换的标准化测试场。"}, {"id": "ui-voyager-2026", "date": "2026.03", "year": 2026, "short": "UI-Voyager", "title": "UI-Voyager: Self-Evolving GUI Agents via Failure Trajectory Reflection", "org": "GUI Agent Lab", "venue": "arXiv:2603.24533", "url": "https://arxiv.org/abs/2603.24533", "track": "software", "type": "framework", "mech": "multi_step_loop", "milestone": false, "summary": "探索通过自动分析失败交互轨迹中的视觉误判与状态偏差实现感知与决策自我演化的 GUI 智能体框架。", "problem": "在线交互失败往往源于特定界面视觉误读，需要从错误状态反馈中自动提炼修正策略。", "mechanism": "失败轨迹视觉状态归因 + 迭代策略更新闭环。", "evidence": "在跨应用桌面任务上实现无人工标注下的持续自改进。"}, {"id": "agentic-mm-reasoning-2026", "date": "2026.04", "year": 2026, "short": "Agentic Multimodal Reasoning 综述 (Wills et al.)", "title": "Agentic Multimodal Reasoning: A Comprehensive Survey of Recent Advances, Taxonomies, Limitations, and Future Directions", "org": "Wills 等", "venue": "Survey (2026)", "url": "https://scholar.google.com/scholar?q=Agentic+Multimodal+Reasoning+A+Comprehensive+Survey+Wills", "track": "cross", "type": "survey", "mech": "active_zoom", "milestone": false, "summary": "系统综述智能体化多模态推理的最新进展与分类学，探讨视觉工具调用、迭代重观察与长程上下文推理局限（用户下载库核验补充）。", "problem": "多模态大模型正从被动看图回答转向主动调用视觉工具迭代推理，亟需系统梳理。", "mechanism": "归纳多模态主动感知与交错推理的分类框架与开放瓶颈。", "evidence": "为理解 2025–2026 感知与推理深度融合趋势提供全景参考。"}, {"id": "rl-gui-survey-2026", "date": "2026.04", "year": 2026, "short": "RL in GUI Agents 综述", "title": "Reinforcement Learning in GUI Agents: A Survey", "org": "GUI RL Survey Team", "venue": "arXiv:2604.27955", "url": "https://arxiv.org/abs/2604.27955", "track": "software", "type": "survey", "mech": "active_zoom", "milestone": false, "summary": "系统综述 2024–2026 年强化学习在 GUI 智能体中的演进，梳理自适应坐标探索、历史状态一致性与主动视觉裁剪策略。", "problem": "强化学习正重塑 GUI 智能体的视觉定位与主动观察决策，亟需系统归纳奖励设计与训练范式。", "mechanism": "对比单步坐标奖励、连续空间重叠奖励与多轮轨迹环境验证奖励。", "evidence": "为理解 GUI-R1 到 GUI-Eyes 的训练范式迁移提供全景图谱。"}, {"id": "prism-2026", "date": "2026.05", "year": 2026, "short": "PRISM", "title": "PRISM: Perception-Reasoning Interleaved for Making Decisions in Embodied Environments", "org": "Inria / Sorbonne", "venue": "ICML 2026 (arXiv:2605.05407)", "url": "https://arxiv.org/abs/2605.05407", "track": "embodied", "type": "mechanism", "mech": "active_zoom", "milestone": true, "summary": "提出感知—推理交错的动态问答（DQA）架构：决策端 LLM 根据当前任务目标主动判断初始视觉描述缺少什么信息，向同一图像动态提出针对性视觉追问。", "problem": "通用 VLM 对同一张场景图生成的泛化静态描述往往遗漏当前决策真正关心的细节（如抽屉里是否有某物）。", "mechanism": "LLM 决策端生成任务驱动视觉问题 → VLM 针对当前图像补充作答 → 精炼状态更新决策。", "evidence": "在 ALFWorld 具身家庭任务上将 Raw Perception 成功率从 70% 提升至 77%（结合 RL 达 80%）。"}, {"id": "x-omniclaw-2026", "date": "2026.05", "year": 2026, "short": "X-OmniClaw", "title": "X-OmniClaw: Native Multimodal Mobile Assistant Architecture", "org": "Ren et al.", "venue": "arXiv:2605.05765", "url": "https://arxiv.org/abs/2605.05765", "track": "software", "type": "framework", "mech": "multi_step_loop", "milestone": false, "summary": "提出统一移动端多模态屏幕理解、语音交互与跨应用工具执行的原生个人助理技术架构。", "problem": "端侧个人助理需要在统一低延迟架构中融合屏幕视觉观察与用户多模态指令。", "mechanism": "原生多模态底座 + 跨应用 GUI 与系统 API 混合动作空间。", "evidence": "实现高响应速度的端侧个人日常任务自动化闭环。"}, {"id": "aoi-2026", "date": "2026.06", "year": 2026, "short": "AOI", "title": "AOI: Agent-Computer Observation Interfaces Enable Dynamic Computer Use", "org": "Li & Shi (2026)", "venue": "arXiv:2606.29472", "url": "https://arxiv.org/abs/2606.29472", "track": "software", "type": "mechanism", "mech": "temporal_state", "milestone": true, "summary": "针对标准计算机智能体在两次截图间隔（3–5 秒）对瞬时弹窗、动画和音频完全盲聋的缺陷，设计零重训 <1 ms 快速闸门观察接口。", "problem": "周期性静态截图采样会漏掉动作之间转瞬即逝的 Toast 提示、视频变化与语音指令。", "mechanism": "像素差分与 CLIP 关键帧门控 + Whisper 音频按需转写 + 持久化视觉事件文字叙述记录。", "evidence": "在 DynaCU-Bench 动态任务上使 Claude Sonnet 4.6 成功率从标准循环的 38% 跃升至 82%。"}, {"id": "osworld2-2026", "date": "2026.06", "year": 2026, "short": "OSWorld 2.0", "title": "OSWorld 2.0: Benchmarking Computer Use Agents on Long-Horizon Real-World Tasks", "org": "HKU / Salesforce / OSU", "venue": "arXiv:2606.29537", "url": "https://arxiv.org/abs/2606.29537", "track": "software", "type": "benchmark", "mech": "multi_step_loop", "milestone": false, "summary": "将桌面电脑操作基准推向小时级超长程工作流（人类中位耗时约 1.6 小时、平均需 318 次工具调用），检验长程状态维持与跨应用感知鲁棒性。", "problem": "早期 15–50 步短程桌面任务已逐步接近饱和，无法暴露长周期真实办公中的状态累积退化。", "mechanism": "108 个跨多软件、长跨度真实复杂办公与工程工作流及系统状态验证。", "evidence": "即便 2026 年最前沿系统在该超长程基准上的完成率也仅 20.6%。"}, {"id": "multimodal-agentic-survey-2026", "date": "2026.06", "year": 2026, "short": "多模态智能体架构综述 (Mokaria et al.)", "title": "A Survey on Foundations and Frontiers of Multimodal Agentic Frameworks: Techniques and Applications", "org": "Mokaria 等 (MBZUAI / NUS / Oxford)", "venue": "TMLR 2026 (arXiv:2608.20379, v1 2026.06)", "url": "https://arxiv.org/abs/2608.20379", "track": "cross", "type": "survey", "mech": "representation", "milestone": true, "summary": "系统梳理多模态如何重塑智能体五大核心模块，明确归纳感知融合架构从“委派式工具转译”向“晚期特征融合”及“早期原生多模态”的演进（用户下载库核验）。", "problem": "多模态智能体架构路线纷繁复杂，亟需从模块融合深度与成本约束角度建立理论坐标系。", "mechanism": "横向对比 Delegated / Late-Fusion / Early-Fusion 感知接入范式与推理部署成本。", "evidence": "为理解 2021–2026 智能体感知底层架构变迁提供权威分类学依据。"}, {"id": "seek-to-segment-2026", "date": "2026.07", "year": 2026, "short": "Seek to Segment", "title": "Seek to Segment: Active Perception for Fine-Grained Image Segmentation", "org": "Vision Agent Lab", "venue": "arXiv:2607.02497", "url": "https://arxiv.org/abs/2607.02497", "track": "software", "type": "mechanism", "mech": "active_zoom", "milestone": false, "summary": "将强化学习主动视觉探查策略迁移至复杂细粒度图像分割任务，自主定位并局部聚焦目标边界线索。", "problem": "全局低分辨率分割在面对遮挡与复杂背景微小目标时边界精度不足。", "mechanism": "由粗定位到局部裁剪放大细化的主动感知分割策略。", "evidence": "显著提升复杂场景下细粒度目标分割的边界 IoU。"}, {"id": "gui-landscape-survey-2026", "date": "2026.08", "year": 2026, "short": "GUI Agent Systems 综述", "title": "The Landscape of GUI Agent Systems: Environment Drift, Error Handling, and Evaluation", "org": "GUI Systems Group", "venue": "arXiv:2608.09278", "url": "https://arxiv.org/abs/2608.09278", "track": "software", "type": "survey", "mech": "temporal_state", "milestone": false, "summary": "系统审视 GUI 智能体从学术基准迈向复杂真实软件系统时的环境漂移、异常处理与跨协议评测边界。", "problem": "真实生产环境中的界面动态弹窗、异步加载与权限变更远超静态基准假设。", "mechanism": "从观察可靠性、状态异常检测与闭环自愈三层梳理系统工程挑战。", "evidence": "揭示未来商业级桌面与移动智能体感知鲁棒性的关键攻关方向。"}, {"id": "pera-2026", "date": "2026.08", "year": 2026, "short": "Pera", "title": "Pera: A Persistent Agent Architecture with Lifecycle Active Perception", "org": "Persistent Agent Lab", "venue": "arXiv:2608.30478", "url": "https://arxiv.org/abs/2608.30478", "track": "software", "type": "mechanism", "mech": "temporal_state", "milestone": true, "summary": "提出以生命周期主动感知为核心的持久智能体架构，跨任务边界持续监控内外部信号变化以自愈失效流程。", "problem": "传统任务型 Agent 在单次任务结束后即停止感知，无法响应后台环境与依赖状态变化。", "mechanism": "后台低开销生命周期事件哨兵持续监听环境状态漂移并触发主动修复。", "evidence": "实现长生命周期智能体在跨会话环境变化时的持续在线自愈。"}, {"id": "chronostate-2026", "date": "2026.08", "year": 2026, "short": "ChronoState", "title": "ChronoState: Elapsed Time Conditioning for Temporally-Aware LLM Agents", "org": "Temporal Agent Lab", "venue": "arXiv (2026.08)", "url": "https://scholar.google.com/scholar?q=ChronoState+Elapsed+Time+Conditioning+LLM+Agents", "track": "software", "type": "mechanism", "mech": "temporal_state", "milestone": false, "summary": "针对冻结骨干模型忽略多轮对话间真实物理流逝时间的问题，提出隐式时间流逝条件注入接口校准动作与工具重查询。", "problem": "大语言模型在多轮交互间隙缺乏对真实时间跨度的敏感度，容易误用过期工具观测。", "mechanism": "将交互间隔时间差编码为条件信号注入推理过程，动态判定状态新鲜度。", "evidence": "在时间敏感工具调用与动态状态追踪任务中大幅降低过期幻觉。"}, {"id": "closed-loop-perception-survey-2026", "date": "2026.09", "year": 2026, "short": "开放环境智能体感知综述 (Zhao et al.)", "title": "Perception for Large Language Model-Based Agents: A Closed-Loop Framework in Open Environments", "org": "Zhao 等", "venue": "Preprints 202609.0610 (2026.09)", "url": "https://www.preprints.org/manuscript/202609.0610", "track": "cross", "type": "survey", "mech": "active_zoom", "milestone": true, "summary": "专门聚焦 LLM 智能体感知的理论综述，打通文本、音视频流、GUI、程序反馈与具身五通道，提出“获取—边界判断—主动策略—时序验证—状态更新”五环节闭环（用户下载库核验）。", "problem": "“智能体感知”长期分散在各垂直应用文献中，缺乏跨模态、跨环境的统一系统理论定义。", "mechanism": "将感知定义为嵌入交互闭环的动态信息获取与状态验证过程，而非孤立的前置编码器。", "evidence": "从理论层面正式确立主动感知策略与时序状态验证在智能体感知中的核心地位。"}, {"id": "efficient-gui-survey-2026", "date": "2026.09", "year": 2026, "short": "Efficient GUI Agents 综述", "title": "Efficient GUI Agents: A Survey on Observation, Memory, Action, and Runtime Optimization", "org": "Bai et al.", "venue": "arXiv:2609.02309", "url": "https://arxiv.org/abs/2609.02309", "track": "software", "type": "survey", "mech": "representation", "milestone": false, "summary": "从观察（Observation）压缩、记忆管理、动作空间与运行时优化四个系统层级综述高效 GUI 智能体设计。", "problem": "高分辨率截图流与长交互历史带来巨大的计算与端侧部署延迟。", "mechanism": "系统对比视觉 token 剪枝、混合结构化接口与自适应局部裁剪的效率收益。", "evidence": "为构建低延迟实用级屏幕智能体提供系统优化指南。"}, {"id": "maap-2026", "date": "2026.09", "year": 2026, "short": "MAAP", "title": "MAAP: Multi-Agent Active Perception for Bimanual Robotic Manipulation", "org": "Embodied Coordination Lab", "venue": "arXiv:2609.21929", "url": "https://arxiv.org/abs/2609.21929", "track": "embodied", "type": "mechanism", "mech": "embodied_3d", "milestone": false, "summary": "提出双臂协同多智能体主动感知框架，证明协同操作本身可作为主动感知机制突破固定视角遮挡。", "problem": "单视角固定相机在双臂复杂操作中频繁遭遇遮挡盲区。", "mechanism": "将操作臂与观察臂建模为协同多智能体，联合优化信息增益与操作控制。", "evidence": "在严重遮挡的真机双臂精细操作任务中显著提升闭环成功率。"}, {"id": "me-vlm-2026", "date": "2026.09", "year": 2026, "short": "ME-VLM", "title": "ME-VLM: A Unified VLM for Embodied Cognition and Agent Coordination", "org": "Embodied Cognition Lab", "venue": "arXiv:2609.24526", "url": "https://arxiv.org/abs/2609.24526", "track": "embodied", "type": "mechanism", "mech": "embodied_3d", "milestone": false, "summary": "将物理视觉感知、时空推理、规划与执行结果判断整合进统一 VLM，并在训练中显式加入 execution observations 与 feedback。", "problem": "具身模型在动作执行后常忽视环境实际变化反馈，导致错误动作连锁放大。", "mechanism": "显式构建动作执行后观察反馈监督样本，训练模型对比预期与实际环境状态。", "evidence": "在多步骤具身物理纠错与协调任务中大幅提升闭环鲁棒性。"}, {"id": "qwen38-omni-2026", "date": "2026.09", "year": 2026, "short": "Qwen3.8-Omni", "title": "Qwen3.8-Omni: Native Omnimodal Agentic Perception", "org": "Alibaba Qwen Team", "venue": "Qwen Release (2026.09)", "url": "https://qwenlm.github.io/", "track": "cross", "type": "foundation", "mech": "av_stream", "milestone": false, "summary": "将此前 OmniAgent 探索的主动长视频与音视频工具检视洞见内化为原生全模态智能体基座能力。", "problem": "外部多工具级联调用在流式音视频交互中仍存在调度开销。", "mechanism": "原生端到端音画时空定位与自适应帧率感知训练。", "evidence": "在长音视频理解与实时全模态交互任务上实现端到端高性能。"}, {"id": "gui-pra-2026", "date": "2026.10", "year": 2026, "short": "GUI-PRA", "title": "GUI-PRA: Process Reward Agent for GUI Task Execution", "org": "EMNLP 2026", "venue": "EMNLP 2026 (Oct 2026)", "url": "https://aclanthology.org/2026.emnlp-main.1304.pdf", "track": "software", "type": "mechanism", "mech": "temporal_state", "milestone": false, "summary": "提出面向 GUI 任务的过程奖励智能体，弥补通用 PRM 缺乏真实界面状态变化评估知识导致的步骤错判。", "problem": "多步桌面操作需要精确判断每一步点击后的界面状态是否真正向目标推进。", "mechanism": "结合前后帧状态变化验证训练专用界面过程奖励评估器。", "evidence": "显著提升测试时搜索与多步 RL 训练中的步骤状态判别准确度。"}, {"id": "groundgui-2026", "date": "2026.10", "year": 2026, "short": "GroundGUI", "title": "GroundGUI: GUI Grounding by High-Quality Data and Distillation-to-Reinforcement Learning", "org": "GUI Grounding Lab", "venue": "arXiv:2610.19100", "url": "https://arxiv.org/abs/2610.19100", "track": "software", "type": "mechanism", "mech": "spatial_grounding", "milestone": true, "summary": "构建覆盖三端的 ScreenRef 数据集并引入拒答机制（目标控件不存在时拒绝输出坐标），结合蒸馏到强化学习提升高可靠定位。", "problem": "现有定位模型在目标控件不存在或界面尚未加载完成时仍强行输出虚假坐标造成误点。", "mechanism": "引入负样本拒答监督 + 轨迹蒸馏到 RL 策略优化。", "evidence": "大幅降低界面定位幻觉率，提升开放操作系统执行的安全性与可信度。"}, {"id": "android-active-perc-2026", "date": "2026.10", "year": 2026, "short": "Android Active Perception", "title": "Active Visual Perception for Mobile GUI Agents", "org": "Mobile Agent Lab", "venue": "arXiv:2610.26203", "url": "https://arxiv.org/abs/2610.26203", "track": "software", "type": "mechanism", "mech": "active_zoom", "milestone": false, "summary": "将“何时以及如何裁剪、缩放、平移”的主动视觉感知策略部署到安卓移动 GUI 智能体中。", "problem": "移动端密集列表与小图标同样需要自适应局部放大检视机制。", "mechanism": "面向移动端纵横比定制的动态缩放平移工具策略学习。", "evidence": "在复杂移动端细粒度控件定位基准上显著减少误触。"}, {"id": "envos-2026", "date": "2026.10", "year": 2026, "short": "EnvOS", "title": "EnvOS: Auditing Environment Drift in Computer-Use Agents", "org": "OSU-NLP / GUI Lab", "venue": "arXiv (2026.10.29)", "url": "https://scholar.google.com/scholar?q=EnvOS+Environment+Drift+Computer+Use+Agents", "track": "software", "type": "benchmark", "mech": "temporal_state", "milestone": false, "summary": "面向计算机使用智能体提出操作系统环境漂移（Environment Drift）审计与评测基准，检验后台状态悄然改变时的感知适应力。", "problem": "真实桌面系统后台弹窗、文件改动与网络波动随时导致环境状态漂移。", "mechanism": "注入可控系统级环境漂移事件，评测智能体察觉变化并重新校准状态的能力。", "evidence": "揭示现有 CUA 在非预期环境漂移下普遍缺乏状态重确认机制。"}, {"id": "hcu-2026", "date": "2026.10", "year": 2026, "short": "HCU (Hybrid Computer Use)", "title": "HCU: Hybrid Computer Use Combining Accessibility Trees and Visual GUI Perception", "org": "OSU-NLP", "venue": "arXiv (2026.10.30)", "url": "https://scholar.google.com/scholar?q=HCU+Hybrid+Computer+Use+Accessibility+Tree", "track": "software", "type": "mechanism", "mech": "text_interface", "milestone": false, "summary": "在桌面操作中构建无障碍树（a11y tree）与视觉 GUI 交互相融合的混合计算机接口，兼顾结构化精度与视觉通用性。", "problem": "纯视觉定位在高密文本控件上仍有误差，而纯 a11y 树在自定义绘制控件上缺失。", "mechanism": "动态融合结构化控件树节点与高分辨率屏幕视觉特征。", "evidence": "在 OSWorld 上验证混合多模态观察接口相比单一模态的显著优势。"}, {"id": "cua-master-2026", "date": "2026.11", "year": 2026, "short": "CUA-Master", "title": "CUA-Master: Scaling Recursive Self-Improvement for General Computer-Use Agents", "org": "OSWorld / CUA Lab", "venue": "arXiv (2026.11.02)", "url": "https://scholar.google.com/scholar?q=CUA-Master+Recursive+Self-Improvement", "track": "software", "type": "framework", "mech": "multi_step_loop", "milestone": false, "summary": "面向 OSWorld 开展开放世界规模化递归自改进经验飞轮训练的通用计算机操作智能体。", "problem": "长程电脑任务需要持续从真实环境执行反馈中自动过滤高质量轨迹并迭代感知决策。", "mechanism": "大规模并行沙盒采集 + 自动状态验收过滤 + 递归策略自改进。", "evidence": "进一步刷新开源通用计算机操作智能体在 OSWorld 上的纪录。"}, {"id": "baya-2026", "date": "2026.11", "year": 2026, "short": "Baya", "title": "Baya: Compile-Before-Execute Defense Against Prompt Injection in Web Agent Perception", "org": "Web Security Lab", "venue": "arXiv (2026.11.04)", "url": "https://scholar.google.com/scholar?q=Baya+Prompt+Injection+Web+Agent", "track": "software", "type": "mechanism", "mech": "temporal_state", "milestone": false, "summary": "针对网页浏览智能体感知通道面临的间接提示词注入风险提出“先编译后执行”的感知安全防御框架。", "problem": "网页 DOM 与截图中的恶意隐藏指令极易劫持智能体的感知与下一步动作。", "mechanism": "在感知输入解析阶段剥离不可信数据流与控制流，编译生成受限执行计划。", "evidence": "大幅降低开放网页浏览中的跨站提示注入攻击成功率。"}, {"id": "web-hallucination-2026", "date": "2026.11", "year": 2026, "short": "Web Element Hallucination", "title": "Mechanistic Interpretability of Web Element Hallucination in LLM Agents", "org": "Interpretability & Agent Lab", "venue": "arXiv:2611.18514", "url": "https://arxiv.org/abs/2611.18514", "track": "software", "type": "mechanism", "mech": "temporal_state", "milestone": false, "summary": "利用线性探针开展机制可解释性研究，诊断网页智能体在感知界面元素时产生定位幻觉与认知失败的内在机理。", "problem": "黑盒指标只能统计定位失败率，无法解释大模型究竟在表征哪一层把无效或干扰元素误判为目标。", "mechanism": "对多模态/文本观察隐状态施加线性探针，定位界面感知幻觉的内部表征触发点。", "evidence": "截至 2026 年 11 月的最新机制可解释性前沿，为抗幻觉感知架构提供白盒诊断工具。"}];
+
+const TRACK_INFO = {
+  software: { label: "软件/数字环境", cls: "sw", tagCls: "tag-sw" },
+  embodied: { label: "具身/物理空间", cls: "em", tagCls: "tag-em" },
+  cross:    { label: "跨域/底座/综述", cls: "cr", tagCls: "tag-cr" }
+};
+
+const TYPE_INFO = {
+  mechanism:  { label: "感知机制/方法", color: "var(--t-mech)" },
+  framework:  { label: "智能体闭环框架", color: "var(--t-frame)" },
+  benchmark:  { label: "环境与评测基准", color: "var(--t-bench)" },
+  foundation: { label: "基础模型底座", color: "var(--t-found)" },
+  survey:     { label: "领域综述", color: "var(--t-surv)" }
+};
+
+const MECH_INFO = {
+  text_interface:    { name: "输入过滤与结构化接口", ex: "MindAct · SWE-agent · Agent-E · HCU" },
+  representation:    { name: "高分屏编码与视觉表征", ex: "Pix2Struct · CogAgent · Ferret-UI · ShowUI" },
+  spatial_grounding: { name: "空间定位与可供性接地", ex: "SeeAct · SeeClick · OmniParser · UGround · RoboPoint" },
+  active_zoom:       { name: "主动视觉缩放与工具探查", ex: "Matcha · V* · RegionFocus · DeepEyes · GUI-Eyes · PRISM" },
+  multi_step_loop:   { name: "多步交互闭环与帧间对比", ex: "WebVoyager · OSWorld · UI-TARS · Aguvis" },
+  av_stream:         { name: "音视频流与实时多模态", ex: "Dispider · Temporal CoT · OmniAgent · Qwen3.8-Omni" },
+  temporal_state:    { name: "时序校准、状态估计与安全", ex: "VAGEN · TicToc · AOI · Pera · EnvOS · Baya" },
+  embodied_3d:       { name: "具身多模态传感与3D空间", ex: "SayCan · PaLM-E · RT-2 · LLM-Grounder · ConceptGraphs" }
+};
+
+let barMode = 'milestone';
+let calTracks = { software: true, embodied: true, cross: true };
+let selectedPaperId = null;
+let savedIds = new Set(JSON.parse(localStorage.getItem('agent_perc_v3_saved') || '[]'));
+
+function syncSaved() {
+  localStorage.setItem('agent_perc_v3_saved', JSON.stringify([...savedIds]));
+  document.getElementById('badge-saved').textContent = savedIds.size;
+}
+
+function toggleSave(id, e) {
+  if (e) e.stopPropagation();
+  if (savedIds.has(id)) savedIds.delete(id);
+  else savedIds.add(id);
+  syncSaved();
+  renderArchive();
+  renderBookmarks();
+  if (selectedPaperId === id) renderStickyPreview(id);
+  const drawer = document.getElementById('detail-drawer');
+  if (drawer.classList.contains('open') && drawer.dataset.pid === id) {
+    openDrawer(id);
+  }
+}
+
+function switchTab(tabId, btn) {
+  document.querySelectorAll('.page-view').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+  document.getElementById(tabId).classList.add('active');
+  btn.classList.add('active');
+}
+
+function toggleTheme() {
+  const html = document.documentElement;
+  html.dataset.theme = html.dataset.theme === 'dark' ? 'light' : 'dark';
+}
+
+function setBarMode(mode) {
+  barMode = mode;
+  const btnMs = document.getElementById('bar-mode-ms');
+  const btnAll = document.getElementById('bar-mode-all');
+  if (mode === 'milestone') {
+    btnMs.style.background = 'var(--surface)'; btnMs.style.color = 'var(--primary)'; btnMs.style.borderColor = 'var(--border)';
+    btnAll.style.background = 'transparent'; btnAll.style.color = 'var(--text)'; btnAll.style.borderColor = 'transparent';
+    document.getElementById('bar-mode-label').textContent = '当前统计：核心里程碑 (48篇)';
+  } else {
+    btnAll.style.background = 'var(--surface)'; btnAll.style.color = 'var(--primary)'; btnAll.style.borderColor = 'var(--border)';
+    btnMs.style.background = 'transparent'; btnMs.style.color = 'var(--text)'; btnMs.style.borderColor = 'transparent';
+    document.getElementById('bar-mode-label').textContent = '当前统计：全量文献库 (190篇)';
+  }
+  renderBarChart();
+}
+
+function renderBarChart() {
+  const subset = barMode === 'milestone' ? PAPERS.filter(p => p.milestone) : PAPERS;
+  document.getElementById('stat-bar-sw').textContent = subset.filter(p => p.track === 'software').length;
+  document.getElementById('stat-bar-em').textContent = subset.filter(p => p.track === 'embodied').length;
+  document.getElementById('stat-bar-cr').textContent = subset.filter(p => p.track === 'cross').length;
+
+  const years = [2021, 2022, 2023, 2024, 2025, 2026];
+  const data = years.map(y => {
+    const list = subset.filter(p => p.year === y);
+    return {
+      year: y,
+      sw: list.filter(p => p.track === 'software').length,
+      em: list.filter(p => p.track === 'embodied').length,
+      cr: list.filter(p => p.track === 'cross').length,
+      total: list.length
+    };
+  });
+
+  const maxT = Math.max(...data.map(d => d.total), 1);
+  const hChart = 148;
+  let svg = `<svg width="100%" height="192" viewBox="0 0 540 192" style="overflow:visible;">`;
+  data.forEach((d, i) => {
+    const x = 30 + i * 85;
+    const w = 44;
+    const h1 = (d.sw / maxT) * hChart;
+    const h2 = (d.em / maxT) * hChart;
+    const h3 = (d.cr / maxT) * hChart;
+    let yCur = 160;
+    if (h1 > 0) { yCur -= h1; svg += `<rect x="${x}" y="${yCur}" width="${w}" height="${h1}" fill="var(--sw)" rx="2"><title>${d.year} 软件环境: ${d.sw}篇</title></rect>`; }
+    if (h2 > 0) { yCur -= h2; svg += `<rect x="${x}" y="${yCur}" width="${w}" height="${h2}" fill="var(--em)" rx="2"><title>${d.year} 具身环境: ${d.em}篇</title></rect>`; }
+    if (h3 > 0) { yCur -= h3; svg += `<rect x="${x}" y="${yCur}" width="${w}" height="${h3}" fill="var(--cr)" rx="2"><title>${d.year} 跨域/底座/综述: ${d.cr}篇</title></rect>`; }
+    svg += `<text x="${x + w/2}" y="${yCur - 6}" text-anchor="middle" font-size="12" font-weight="800" fill="var(--text)">${d.total}</text>`;
+    svg += `<text x="${x + w/2}" y="180" text-anchor="middle" font-size="12" font-weight="700" fill="var(--text-muted)">${d.year === 2026 ? '2026*' : d.year}</text>`;
+  });
+  svg += `</svg>`;
+  document.getElementById('landscape-bar-chart').innerHTML = svg;
+}
+
+function renderDonutChart() {
+  const typeKeys = Object.keys(TYPE_INFO);
+  const total = PAPERS.length;
+  const counts = typeKeys.map(k => ({
+    key: k,
+    label: TYPE_INFO[k].label,
+    color: TYPE_INFO[k].color,
+    count: PAPERS.filter(p => p.type === k).length
+  }));
+
+  const r = 64;
+  const cx = 86;
+  const cy = 86;
+  const circumference = 2 * Math.PI * r;
+  let offset = 0;
+
+  let circles = '';
+  counts.forEach(item => {
+    const pct = item.count / total;
+    const dash = pct * circumference;
+    circles += `
+      <circle r="${r}" cx="${cx}" cy="${cy}" fill="transparent"
+        stroke="${item.color}" stroke-width="24"
+        stroke-dasharray="${dash} ${circumference - dash}"
+        stroke-dashoffset="${-offset}"
+        style="cursor:pointer;transition:opacity 0.15s;"
+        onclick="jumpToType('${item.key}')">
+        <title>${item.label}: ${item.count} 篇 (${(pct*100).toFixed(1)}%)</title>
+      </circle>
+    `;
+    offset += dash;
+  });
+
+  document.getElementById('donut-svg-box').innerHTML = `
+    <svg width="172" height="172" viewBox="0 0 172 172">
+      <g transform="rotate(-90 ${cx} ${cy})">${circles}</g>
+      <text x="${cx}" y="${cy - 4}" text-anchor="middle" font-size="22" font-weight="800" fill="var(--text)">${total}</text>
+      <text x="${cx}" y="${cy + 14}" text-anchor="middle" font-size="11" font-weight="600" fill="var(--text-light)">全量文献</text>
+    </svg>
+  `;
+
+  document.getElementById('donut-legend-box').innerHTML = counts.map(item => `
+    <div class="d-leg-item" onclick="jumpToType('${item.key}')">
+      <span style="display:inline-flex;align-items:center;gap:7px;font-weight:600;">
+        <i style="width:10px;height:10px;border-radius:3px;background:${item.color};display:inline-block;"></i>
+        ${item.label}
+      </span>
+      <span style="font-weight:800;color:var(--text);">${item.count} <small style="font-weight:500;color:var(--text-light);">(${Math.round(item.count/total*100)}%)</small></span>
+    </div>
+  `).join('');
+}
+
+function renderLandscape() {
+  document.getElementById('badge-milestone').textContent = PAPERS.filter(p => p.milestone).length;
+  document.getElementById('badge-total').textContent = PAPERS.length;
+  renderBarChart();
+  renderDonutChart();
+
+  const mechKeys = Object.keys(MECH_INFO);
+  document.getElementById('mech-summary-grid').innerHTML = mechKeys.map(k => {
+    const cnt = PAPERS.filter(p => p.mech === k).length;
+    return `
+      <div class="mech-stat-card" onclick="jumpToFilter('mech', '${k}')">
+        <div class="m-name">${MECH_INFO[k].name}</div>
+        <div class="m-num">${cnt} <span style="font-size:11px;font-weight:500;color:var(--text-light);">篇</span></div>
+        <div class="m-ex">${MECH_INFO[k].ex}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+function jumpToType(typeKey) {
+  jumpToFilter('type', typeKey);
+}
+
+function jumpToFilter(kind, val) {
+  document.getElementById('arch-mech').value = kind === 'mech' ? val : 'all';
+  document.getElementById('arch-type').value = kind === 'type' ? val : 'all';
+  document.getElementById('arch-year').value = 'all';
+  document.getElementById('arch-track').value = 'all';
+  document.getElementById('arch-q').value = '';
+  const archTabBtn = document.querySelectorAll('.tab-btn')[2];
+  switchTab('tab-archive', archTabBtn);
+  renderArchive();
+}
+
+function toggleCalTrack(track) {
+  calTracks[track] = !calTracks[track];
+  const mapId = { software: 'cal-toggle-sw', embodied: 'cal-toggle-em', cross: 'cal-toggle-cr' };
+  document.getElementById(mapId[track]).classList.toggle('inactive', !calTracks[track]);
+  renderCalendarMatrix();
+}
+
+function renderCalendarMatrix() {
+  const years = [2021, 2022, 2023, 2024, 2025, 2026];
+  const months = ['01','02','03','04','05','06','07','08','09','10','11','12'];
+  const milestones = PAPERS.filter(p => p.milestone && calTracks[p.track]);
+
+  let thead = `<thead><tr><th>月份 \ 年份</th>`;
+  years.forEach(y => {
+    const yCnt = milestones.filter(p => p.year === y).length;
+    thead += `<th>${y} 年 <span style="font-weight:500;font-size:11px;color:var(--text-light);">(${yCnt})</span></th>`;
+  });
+  thead += `</tr></thead>`;
+
+  let tbody = `<tbody>`;
+  months.forEach(m => {
+    const rowItems = milestones.filter(p => p.date.slice(5,7) === m);
+    tbody += `<tr class="${rowItems.length === 0 ? 'empty-row' : ''}">`;
+    tbody += `<td class="month-axis">${parseInt(m,10)} 月</td>`;
+    years.forEach(y => {
+      const ym = `${y}.${m}`;
+      const cellPapers = milestones.filter(p => p.date === ym);
+      if (cellPapers.length === 0) {
+        tbody += `<td style="text-align:center;color:var(--text-light);font-size:11px;">${(y===2026 && m==='12') ? '待续' : ''}</td>`;
+      } else {
+        const blocks = cellPapers.map(p => `
+          <div class="cal-block ${TRACK_INFO[p.track].cls}" onclick="openDrawer('${p.id}')" title="${p.title}">
+            <strong>${p.short}</strong>
+            <span>${TYPE_INFO[p.type].label} · ${p.venue.split('(')[0].trim()}</span>
+          </div>
+        `).join('');
+        tbody += `<td>${blocks}</td>`;
+      }
+    });
+    tbody += `</tr>`;
+  });
+  tbody += `</tbody>`;
+  document.getElementById('matrix-calendar-table').innerHTML = thead + tbody;
+}
+
+function clearStickyPreview() {
+  selectedPaperId = null;
+  document.querySelectorAll('#arch-tbody tr').forEach(tr => tr.classList.remove('selected-row'));
+  document.getElementById('sticky-preview-card').innerHTML = `
+    <div style="padding:36px 16px;text-align:center;color:var(--text-light);">
+      <div style="font-size:24px;margin-bottom:8px;opacity:0.7;">📄</div>
+      <div style="font-size:13.5px;font-weight:700;color:var(--text-muted);margin-bottom:4px;">文献机制剖析卡片</div>
+      <div style="font-size:12px;line-height:1.5;">点击左侧列表中的任意一篇文献，<br/>此处将固定展示该工作的痛点、机制与证据。</div>
+    </div>
+  `;
+}
+
+function renderStickyPreview(id) {
+  if (!id) {
+    clearStickyPreview();
+    return;
+  }
+  const p = PAPERS.find(item => item.id === id);
+  if (!p) {
+    clearStickyPreview();
+    return;
+  }
+  selectedPaperId = p.id;
+  const isSaved = savedIds.has(p.id);
+
+  // Highlight selected row in table
+  document.querySelectorAll('#arch-tbody tr').forEach(tr => {
+    tr.classList.toggle('selected-row', tr.dataset.pid === p.id);
+  });
+
+  document.getElementById('sticky-preview-card').innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+      <span style="font-size:11px;font-weight:700;color:var(--text-light);letter-spacing:0.03em;">文献机制剖析</span>
+      <button onclick="clearStickyPreview()" title="关闭详情" style="background:none;border:none;color:var(--text-light);cursor:pointer;font-size:13px;padding:2px 5px;">✕</button>
+    </div>
+    <h3 style="font-size:16px;line-height:1.38;font-weight:800;margin-bottom:8px;color:var(--text);">${p.short}</h3>
+    <div style="font-size:12px;color:var(--text-muted);line-height:1.4;margin-bottom:10px;">${p.title}</div>
+    <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px;">
+      <span class="tag tag-neutral" style="font-weight:700;">${p.date} · ${p.org}</span>
+      <span class="tag ${TRACK_INFO[p.track].tagCls}">${TRACK_INFO[p.track].label}</span>
+      <span class="tag tag-neutral">${TYPE_INFO[p.type].label}</span>
+      ${p.milestone ? '<span class="tag" style="background:var(--primary-soft);color:var(--primary);">★ 核心里程碑</span>' : ''}
+    </div>
+
+    <div class="venue-strip">
+      <div class="v-lbl">出处 / 公开编号</div>
+      <div class="v-val">${p.venue}</div>
+    </div>
+
+    <div class="preview-flow-item">
+      <h4>核心感知痛点与机制解析</h4>
+      <p style="margin-bottom:6px;"><strong>痛点：</strong>${p.problem}</p>
+      <p><strong>机制：</strong>${p.mechanism}</p>
+    </div>
+
+    <div class="preview-highlight-box">
+      <h4>所属感知切面（${MECH_INFO[p.mech].name}）</h4>
+      <p>${p.evidence}</p>
+    </div>
+
+    <div style="display:flex;gap:8px;margin-top:14px;padding-top:12px;border-top:1px solid var(--border);">
+      <a class="btn btn-primary" style="flex:1;justify-content:center;" href="${p.url}" target="_blank" rel="noopener">打开论文原文 ↗</a>
+      <button class="btn" onclick="toggleSave('${p.id}')">${isSaved ? '★ 已入候选' : '☆ 收藏'}</button>
+    </div>
+  `;
+}
+
+function renderArchive() {
+  const q = document.getElementById('arch-q').value.trim().toLowerCase();
+  const fYear = document.getElementById('arch-year').value;
+  const fTrack = document.getElementById('arch-track').value;
+  const fType = document.getElementById('arch-type').value;
+  const fMech = document.getElementById('arch-mech').value;
+
+  const list = PAPERS.filter(p => {
+    if (fYear !== 'all' && String(p.year) !== fYear) return false;
+    if (fTrack !== 'all' && p.track !== fTrack) return false;
+    if (fType !== 'all' && p.type !== fType) return false;
+    if (fMech !== 'all' && p.mech !== fMech) return false;
+    if (q) {
+      const hay = `${p.short} ${p.title} ${p.org} ${p.venue} ${p.summary} ${p.mechanism}`.toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  });
+
+  document.getElementById('arch-match-count').textContent = list.length;
+
+  if (selectedPaperId && !list.some(item => item.id === selectedPaperId)) {
+    selectedPaperId = null;
+  }
+
+  document.getElementById('arch-tbody').innerHTML = list.map(p => {
+    const isSaved = savedIds.has(p.id);
+    const isSel = p.id === selectedPaperId;
+    return `
+      <tr data-pid="${p.id}" class="${isSel ? 'selected-row' : ''}" onclick="renderStickyPreview('${p.id}')">
+        <td style="white-space:nowrap;font-weight:700;color:var(--primary);">${p.date}</td>
+        <td>
+          <div style="font-weight:700;">${p.short} ${p.milestone ? '<span style="color:var(--amber);" title="核心里程碑">★</span>' : ''}</div>
+          <div style="font-size:11.5px;color:var(--text-light);line-height:1.35;">${p.title}</div>
+        </td>
+        <td style="white-space:nowrap;">
+          <span class="tag ${TRACK_INFO[p.track].tagCls}" style="margin-bottom:3px;">${TRACK_INFO[p.track].label}</span><br/>
+          <span class="tag tag-neutral">${TYPE_INFO[p.type].label}</span>
+        </td>
+        <td style="white-space:nowrap;font-size:11.5px;color:var(--text-muted);">${MECH_INFO[p.mech].name}</td>
+        <td style="white-space:nowrap;">
+          <a href="${p.url}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="font-weight:600;display:block;margin-bottom:4px;font-size:12px;">原文 ↗</a>
+          <button class="btn" style="padding:2px 7px;font-size:11px;" onclick="toggleSave('${p.id}', event)">${isSaved ? '★ 已藏' : '☆ 收藏'}</button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+
+  if (list.length > 0) {
+    renderStickyPreview(selectedPaperId);
+  } else {
+    document.getElementById('sticky-preview-card').innerHTML = `<div style="text-align:center;color:var(--text-light);padding:40px 10px;">当前筛选条件无匹配论文</div>`;
+  }
+}
+
+function renderBookmarks() {
+  const list = PAPERS.filter(p => savedIds.has(p.id));
+  const box = document.getElementById('bookmarks-container');
+  if (list.length === 0) {
+    box.innerHTML = `<div class="box-soft" style="text-align:center;color:var(--text-light);padding:32px;">暂未收藏任何论文。请在“二维时空坐标日历”或“全量文献独立检索库”中点击收藏按钮添加。</div>`;
+    return;
+  }
+  box.innerHTML = list.map(p => `
+    <div class="box-soft" style="margin-bottom:10px;display:flex;justify-content:space-between;align-items:flex-start;gap:12px;">
+      <div>
+        <div style="font-size:13.5px;font-weight:700;">[${p.date}] ${p.short} <span class="tag ${TRACK_INFO[p.track].tagCls}" style="margin-left:6px;">${TRACK_INFO[p.track].label}</span></div>
+        <div style="font-size:12px;color:var(--text-muted);margin:4px 0;">${p.summary}</div>
+        <a href="${p.url}" target="_blank" style="font-size:11.5px;">${p.venue} ↗</a>
+      </div>
+      <button class="btn" onclick="toggleSave('${p.id}')">移除</button>
+    </div>
+  `).join('');
+}
+
+function copyBookmarksMd() {
+  const list = PAPERS.filter(p => savedIds.has(p.id));
+  if (list.length === 0) return alert('候选池为空！');
+  const md = list.map(p => `- **[${p.date}] ${p.short}** (${p.venue}): ${p.summary} — [原文](${p.url})`).join('\n');
+  navigator.clipboard.writeText(md).then(() => alert('已复制 Markdown 清单到剪贴板！'));
+}
+
+function openDrawer(id) {
+  const p = PAPERS.find(item => item.id === id);
+  if (!p) return;
+  const drawer = document.getElementById('detail-drawer');
+  drawer.dataset.pid = id;
+  const isSaved = savedIds.has(id);
+
+  document.getElementById('drawer-body').innerHTML = `
+    <div style="font-size:12px;font-weight:700;color:var(--primary);margin-bottom:4px;">${p.date} · ${p.org}</div>
+    <h2 style="font-size:17.5px;line-height:1.35;margin-bottom:10px;padding-right:30px;">${p.title}</h2>
+    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;">
+      <span class="tag ${TRACK_INFO[p.track].tagCls}">${TRACK_INFO[p.track].label}</span>
+      <span class="tag tag-neutral">${TYPE_INFO[p.type].label}</span>
+      <span class="tag tag-neutral">${MECH_INFO[p.mech].name}</span>
+      <span class="tag tag-neutral">${p.venue}</span>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:16px;">
+      <a class="btn btn-primary" href="${p.url}" target="_blank" rel="noopener">打开论文原文 / arXiv ↗</a>
+      <button class="btn" onclick="toggleSave('${p.id}')">${isSaved ? '★ 已加入 PPT 候选池' : '☆ 加入 PPT 候选池'}</button>
+    </div>
+    <div class="preview-box"><h4>📝 一句话核心概括</h4><p>${p.summary}</p></div>
+    <div class="preview-box"><h4>🎯 解决的核心痛点（Problem）</h4><p>${p.problem}</p></div>
+    <div class="preview-box"><h4>⚙️ 关键感知机制（Mechanism）</h4><p>${p.mechanism}</p></div>
+    <div class="preview-box"><h4>📊 代表实验证据（Evidence）</h4><p>${p.evidence}</p></div>
+  `;
+  drawer.classList.add('open');
+  document.getElementById('drawer-backdrop').classList.add('open');
+}
+
+function closeDrawer() {
+  document.getElementById('detail-drawer').classList.remove('open');
+  document.getElementById('drawer-backdrop').classList.remove('open');
+}
+
+syncSaved();
+renderLandscape();
+renderCalendarMatrix();
+renderArchive();
+renderBookmarks();
+</script>
+</body>
+</html>
